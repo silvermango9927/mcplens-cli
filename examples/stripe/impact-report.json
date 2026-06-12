@@ -1,0 +1,79 @@
+{
+  "apiName": "Stripe",
+  "toolCount": 8,
+  "hiddenEndpointCount": 4,
+  "tools": [
+    {
+      "name": "charges_list",
+      "endpoints": [
+        "GET /v1/charges"
+      ],
+      "responseFieldCount": 1
+    },
+    {
+      "name": "charges_get",
+      "endpoints": [
+        "GET /v1/charges/{charge}"
+      ],
+      "responseFieldCount": 1
+    },
+    {
+      "name": "customers_list",
+      "endpoints": [
+        "GET /v1/customers"
+      ],
+      "responseFieldCount": 1
+    },
+    {
+      "name": "customers_get",
+      "endpoints": [
+        "GET /v1/customers/{customer}"
+      ],
+      "responseFieldCount": 11
+    },
+    {
+      "name": "customers_sources_list",
+      "endpoints": [
+        "GET /v1/customers/{customer}/sources"
+      ],
+      "responseFieldCount": 1
+    },
+    {
+      "name": "charges_refund_create",
+      "endpoints": [
+        "POST /v1/charges/{charge}/refund"
+      ],
+      "responseFieldCount": 1
+    },
+    {
+      "name": "customers_create",
+      "endpoints": [
+        "POST /v1/customers"
+      ],
+      "responseFieldCount": 1
+    },
+    {
+      "name": "customers_tax_ids_create",
+      "endpoints": [
+        "POST /v1/customers/{customer}/tax_ids"
+      ],
+      "responseFieldCount": 1
+    }
+  ],
+  "tokenSavings": {
+    "rows": [
+      {
+        "tool": "customers_get",
+        "endpoint": "GET /v1/customers/{customer}",
+        "rawBytes": 1945,
+        "leanBytes": 394,
+        "estimatedRawTokens": 487,
+        "estimatedLeanTokens": 99
+      }
+    ],
+    "rawTokens": 487,
+    "leanTokens": 99,
+    "savedTokens": 388,
+    "savedPercent": 80
+  }
+}

@@ -1,0 +1,159 @@
+{
+  "endpoint": "GET /calendars/{calendarId}/events/{eventId}",
+  "response": {
+    "kind": "calendar#event",
+    "etag": "\"3418291746520000\"",
+    "id": "7p4q1n8r5c2v9b6m3k0d1f2g4h",
+    "status": "confirmed",
+    "htmlLink": "https://www.google.com/calendar/event?eid=N3A0cTFuOHI1YzJ2OWI2bTNrMGQxZjJnNGggYWJoYXlAdmFsc2VhLmFwcA",
+    "created": "2026-05-28T14:32:11.000Z",
+    "updated": "2026-06-10T09:18:53.260Z",
+    "summary": "Q3 Roadmap Planning & Living Brain Sync",
+    "description": "Quarterly planning session.\n\nAgenda:\n1. Review Q2 outcomes\n2. Living Brain v0 ship gate status\n3. Headcount & hiring\n4. Open discussion\n\nDoc: https://docs.google.com/document/d/1a2B3c4D5e6F7g8H9i0J/edit",
+    "location": "Building 41, Conference Room \"Redwood\" (12), 1600 Amphitheatre Pkwy, Mountain View, CA 94043",
+    "colorId": "9",
+    "iCalUID": "7p4q1n8r5c2v9b6m3k0d1f2g4h@google.com",
+    "sequence": 3,
+    "creator": {
+      "id": "00821749103857462910",
+      "email": "abhay@valsea.app",
+      "displayName": "Abhay Ganti",
+      "self": true
+    },
+    "organizer": {
+      "id": "00821749103857462910",
+      "email": "abhay@valsea.app",
+      "displayName": "Abhay Ganti",
+      "self": true
+    },
+    "start": {
+      "dateTime": "2026-06-15T10:00:00-07:00",
+      "timeZone": "America/Los_Angeles"
+    },
+    "end": {
+      "dateTime": "2026-06-15T11:30:00-07:00",
+      "timeZone": "America/Los_Angeles"
+    },
+    "recurringEventId": "7p4q1n8r5c2v9b6m3k0d1f2g4h_R20260601",
+    "originalStartTime": {
+      "dateTime": "2026-06-15T10:00:00-07:00",
+      "timeZone": "America/Los_Angeles"
+    },
+    "transparency": "opaque",
+    "visibility": "private",
+    "attendees": [
+      {
+        "id": "00821749103857462910",
+        "email": "abhay@valsea.app",
+        "displayName": "Abhay Ganti",
+        "organizer": true,
+        "self": true,
+        "resource": false,
+        "optional": false,
+        "responseStatus": "accepted",
+        "comment": "",
+        "additionalGuests": 0
+      },
+      {
+        "id": "10932857461029384756",
+        "email": "priya.nair@valsea.app",
+        "displayName": "Priya Nair",
+        "organizer": false,
+        "self": false,
+        "resource": false,
+        "optional": false,
+        "responseStatus": "accepted",
+        "comment": "Will join 5 min late, coming from another meeting.",
+        "additionalGuests": 1
+      },
+      {
+        "id": "20384756102938475610",
+        "email": "marcus.feldman@partner-co.com",
+        "displayName": "Marcus Feldman",
+        "organizer": false,
+        "self": false,
+        "resource": false,
+        "optional": true,
+        "responseStatus": "tentative",
+        "comment": "",
+        "additionalGuests": 0
+      },
+      {
+        "email": "redwood-room@resource.calendar.google.com",
+        "displayName": "Building 41 - Redwood (12)",
+        "organizer": false,
+        "self": false,
+        "resource": true,
+        "optional": false,
+        "responseStatus": "accepted",
+        "comment": "",
+        "additionalGuests": 0
+      }
+    ],
+    "guestsCanInviteOthers": false,
+    "guestsCanModify": false,
+    "guestsCanSeeOtherGuests": true,
+    "privateCopy": false,
+    "locked": false,
+    "reminders": {
+      "useDefault": false,
+      "overrides": [
+        { "method": "popup", "minutes": 10 },
+        { "method": "email", "minutes": 1440 },
+        { "method": "popup", "minutes": 30 }
+      ]
+    },
+    "conferenceData": {
+      "entryPoints": [
+        {
+          "entryPointType": "video",
+          "uri": "https://meet.google.com/abc-defg-hij",
+          "label": "meet.google.com/abc-defg-hij",
+          "pin": "",
+          "regionCode": "US"
+        },
+        {
+          "entryPointType": "phone",
+          "uri": "tel:+1-650-555-0142",
+          "label": "+1 650-555-0142",
+          "pin": "928374651",
+          "regionCode": "US"
+        },
+        {
+          "entryPointType": "more",
+          "uri": "https://tel.meet/abc-defg-hij?pin=9283746510293",
+          "label": "",
+          "pin": "9283746510293",
+          "regionCode": ""
+        }
+      ],
+      "conferenceSolution": {
+        "key": {
+          "type": "hangoutsMeet"
+        },
+        "name": "Google Meet",
+        "iconUri": "https://fonts.gstatic.com/s/i/productlogos/meet_2020q4/v6/web-512dp/logo_meet_2020q4_color_2x_web_512dp.png"
+      },
+      "conferenceId": "abc-defg-hij",
+      "signature": "ADtxd8tQ9vK3mZ1pR7wL0nB4yH6cF2sX",
+      "notes": "Dial-in PIN required for phone entry. Meeting recorded to Drive."
+    },
+    "source": {
+      "url": "https://valsea.app/internal/planning/q3",
+      "title": "Valsea Internal Planning Hub"
+    },
+    "eventType": "default",
+    "extendedProperties": {
+      "private": {
+        "internalMeetingId": "MTG-2026-Q3-0042",
+        "createdByBot": "false",
+        "syncToken": "CiAKEgoMaW50ZXJuYWxfc3luEAEYgIDA"
+      },
+      "shared": {
+        "department": "engineering",
+        "costCenter": "CC-4410",
+        "projectCode": "living-brain-v0"
+      }
+    }
+  }
+}

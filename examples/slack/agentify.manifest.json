@@ -1,0 +1,403 @@
+{
+  "agentifyVersion": 1,
+  "api": {
+    "name": "Slack",
+    "baseUrl": "https://slack.com/api",
+    "auth": {
+      "type": "bearer",
+      "envVar": "SLACK_API_TOKEN"
+    }
+  },
+  "tools": [
+    {
+      "name": "users_info",
+      "description": "Get information about a user",
+      "params": [
+        {
+          "name": "user",
+          "in": "query",
+          "type": "string",
+          "required": true,
+          "description": "User ID to get info on."
+        },
+        {
+          "name": "include_locale",
+          "in": "query",
+          "type": "boolean",
+          "required": false,
+          "description": "Set to true to receive the locale for this user."
+        }
+      ],
+      "requests": [
+        {
+          "key": "main",
+          "method": "GET",
+          "path": "/users.info"
+        }
+      ],
+      "responseMap": [
+        {
+          "from": "user.id",
+          "to": "user_id",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "user.is_owner",
+          "to": "is_owner",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "user.is_primary_owner",
+          "to": "is_primary_owner",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "user.name",
+          "to": "user_name",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "user.profile.display_name",
+          "to": "display_name",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "user.profile.first_name",
+          "to": "first_name",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "user.profile.huddle_state",
+          "to": "huddle_state",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "user.profile.last_name",
+          "to": "last_name",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "user.profile.real_name",
+          "to": "real_name",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "user.profile.status_emoji_display_info[].display_url",
+          "to": "display_url",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "user.profile.status_emoji_display_info[].emoji_name",
+          "to": "emoji_name",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "user.profile.title",
+          "to": "title",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "user.team_id",
+          "to": "team_id",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "user.updated",
+          "to": "updated",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        }
+      ]
+    },
+    {
+      "name": "users_list",
+      "description": "List all users in a Slack team",
+      "params": [
+        {
+          "name": "limit",
+          "in": "query",
+          "type": "number",
+          "required": false,
+          "description": "The maximum number of items to return."
+        },
+        {
+          "name": "cursor",
+          "in": "query",
+          "type": "string",
+          "required": false,
+          "description": "Pagination cursor for the next page of results."
+        },
+        {
+          "name": "include_locale",
+          "in": "query",
+          "type": "boolean",
+          "required": false,
+          "description": "Set to true to receive the locale for users."
+        }
+      ],
+      "requests": [
+        {
+          "key": "main",
+          "method": "GET",
+          "path": "/users.list"
+        }
+      ],
+      "responseMap": [
+        {
+          "from": "id",
+          "to": "id",
+          "source": "main",
+          "reason": "Stable identifier if present"
+        }
+      ]
+    },
+    {
+      "name": "conversations_list",
+      "description": "List all channels in a Slack team",
+      "params": [
+        {
+          "name": "limit",
+          "in": "query",
+          "type": "number",
+          "required": false,
+          "description": "The maximum number of items to return."
+        },
+        {
+          "name": "cursor",
+          "in": "query",
+          "type": "string",
+          "required": false,
+          "description": "Pagination cursor for the next page of results."
+        },
+        {
+          "name": "types",
+          "in": "query",
+          "type": "string",
+          "required": false,
+          "description": "Mix of channel types to include, comma separated."
+        },
+        {
+          "name": "exclude_archived",
+          "in": "query",
+          "type": "boolean",
+          "required": false,
+          "description": "Set to true to exclude archived channels."
+        }
+      ],
+      "requests": [
+        {
+          "key": "main",
+          "method": "GET",
+          "path": "/conversations.list"
+        }
+      ],
+      "responseMap": [
+        {
+          "from": "id",
+          "to": "id",
+          "source": "main",
+          "reason": "Stable identifier if present"
+        }
+      ]
+    },
+    {
+      "name": "emoji_list",
+      "description": "List custom emoji for a team",
+      "params": [
+        {
+          "name": "include_categories",
+          "in": "query",
+          "type": "boolean",
+          "required": false,
+          "description": "Set to true to return a list of emoji categories."
+        }
+      ],
+      "requests": [
+        {
+          "key": "main",
+          "method": "GET",
+          "path": "/emoji.list"
+        }
+      ],
+      "responseMap": [
+        {
+          "from": "id",
+          "to": "id",
+          "source": "main",
+          "reason": "Stable identifier if present"
+        }
+      ]
+    },
+    {
+      "name": "conversations_history",
+      "description": "Fetch a conversation's history of messages and events",
+      "params": [
+        {
+          "name": "channel",
+          "in": "query",
+          "type": "string",
+          "required": true,
+          "description": "Conversation ID to fetch history for."
+        },
+        {
+          "name": "limit",
+          "in": "query",
+          "type": "number",
+          "required": false,
+          "description": "The maximum number of items to return."
+        },
+        {
+          "name": "cursor",
+          "in": "query",
+          "type": "string",
+          "required": false,
+          "description": "Pagination cursor for the next page of results."
+        },
+        {
+          "name": "oldest",
+          "in": "query",
+          "type": "string",
+          "required": false,
+          "description": "Only messages after this Unix timestamp will be included."
+        },
+        {
+          "name": "latest",
+          "in": "query",
+          "type": "string",
+          "required": false,
+          "description": "Only messages before this Unix timestamp will be included."
+        }
+      ],
+      "requests": [
+        {
+          "key": "main",
+          "method": "GET",
+          "path": "/conversations.history"
+        }
+      ],
+      "responseMap": [
+        {
+          "from": "id",
+          "to": "id",
+          "source": "main",
+          "reason": "Stable identifier if present"
+        }
+      ]
+    },
+    {
+      "name": "conversations_info",
+      "description": "Retrieve information about a conversation",
+      "params": [
+        {
+          "name": "channel",
+          "in": "query",
+          "type": "string",
+          "required": true,
+          "description": "Conversation ID to learn more about."
+        },
+        {
+          "name": "include_locale",
+          "in": "query",
+          "type": "boolean",
+          "required": false,
+          "description": "Set to true to receive the locale for this conversation."
+        },
+        {
+          "name": "include_num_members",
+          "in": "query",
+          "type": "boolean",
+          "required": false,
+          "description": "Set to true to include the member count for the channel."
+        }
+      ],
+      "requests": [
+        {
+          "key": "main",
+          "method": "GET",
+          "path": "/conversations.info"
+        }
+      ],
+      "responseMap": [
+        {
+          "from": "id",
+          "to": "id",
+          "source": "main",
+          "reason": "Stable identifier if present"
+        }
+      ]
+    },
+    {
+      "name": "chat_post_message",
+      "description": "Send a message to a channel",
+      "params": [
+        {
+          "name": "channel",
+          "in": "query",
+          "type": "string",
+          "required": true,
+          "description": "Channel, private group, or IM channel to send message to."
+        },
+        {
+          "name": "text",
+          "in": "query",
+          "type": "string",
+          "required": false,
+          "description": "The formatted text of the message to be published."
+        },
+        {
+          "name": "thread_ts",
+          "in": "query",
+          "type": "string",
+          "required": false,
+          "description": "Provide another message's ts value to make this a reply."
+        }
+      ],
+      "requests": [
+        {
+          "key": "main",
+          "method": "POST",
+          "path": "/chat.postMessage"
+        }
+      ],
+      "responseMap": [
+        {
+          "from": "id",
+          "to": "id",
+          "source": "main",
+          "reason": "Stable identifier if present"
+        }
+      ]
+    }
+  ],
+  "hiddenEndpoints": [
+    {
+      "endpoint": "GET /admin.users.list",
+      "reason": "Operational/admin endpoint outside the V1 agent-useful toolset"
+    },
+    {
+      "endpoint": "POST /files.upload",
+      "reason": "UI asset or binary payload; usually not agent-relevant"
+    },
+    {
+      "endpoint": "POST /oauth.v2.access",
+      "reason": "Operational/admin endpoint outside the V1 agent-useful toolset"
+    },
+    {
+      "endpoint": "POST /users.setPhoto",
+      "reason": "UI asset or binary payload; usually not agent-relevant"
+    }
+  ]
+}

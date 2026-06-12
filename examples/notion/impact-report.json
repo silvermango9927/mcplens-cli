@@ -1,0 +1,86 @@
+{
+  "apiName": "Notion",
+  "toolCount": 9,
+  "hiddenEndpointCount": 3,
+  "tools": [
+    {
+      "name": "users_list",
+      "endpoints": [
+        "GET /v1/users"
+      ],
+      "responseFieldCount": 1
+    },
+    {
+      "name": "blocks_children_list",
+      "endpoints": [
+        "GET /v1/blocks/{block_id}/children"
+      ],
+      "responseFieldCount": 1
+    },
+    {
+      "name": "databases_get",
+      "endpoints": [
+        "GET /v1/databases/{database_id}"
+      ],
+      "responseFieldCount": 1
+    },
+    {
+      "name": "pages_get",
+      "endpoints": [
+        "GET /v1/pages/{page_id}"
+      ],
+      "responseFieldCount": 16
+    },
+    {
+      "name": "pages_properties_get",
+      "endpoints": [
+        "GET /v1/pages/{page_id}/properties/{property_id}"
+      ],
+      "responseFieldCount": 1
+    },
+    {
+      "name": "comments_create",
+      "endpoints": [
+        "POST /v1/comments"
+      ],
+      "responseFieldCount": 1
+    },
+    {
+      "name": "databases_query",
+      "endpoints": [
+        "POST /v1/databases/{database_id}/query"
+      ],
+      "responseFieldCount": 1
+    },
+    {
+      "name": "pages_create",
+      "endpoints": [
+        "POST /v1/pages"
+      ],
+      "responseFieldCount": 1
+    },
+    {
+      "name": "pages_update",
+      "endpoints": [
+        "PATCH /v1/pages/{page_id}"
+      ],
+      "responseFieldCount": 1
+    }
+  ],
+  "tokenSavings": {
+    "rows": [
+      {
+        "tool": "pages_get",
+        "endpoint": "GET /v1/pages/{page_id}",
+        "rawBytes": 3138,
+        "leanBytes": 379,
+        "estimatedRawTokens": 785,
+        "estimatedLeanTokens": 95
+      }
+    ],
+    "rawTokens": 785,
+    "leanTokens": 95,
+    "savedTokens": 690,
+    "savedPercent": 88
+  }
+}

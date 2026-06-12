@@ -1,0 +1,313 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Google Calendar",
+    "description": "Manipulates events and other calendar data.",
+    "version": "v3"
+  },
+  "servers": [
+    {
+      "url": "https://www.googleapis.com/calendar/v3"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "paths": {
+    "/calendars/{calendarId}/events/{eventId}": {
+      "get": {
+        "operationId": "events_get",
+        "summary": "Returns an event based on its Google Calendar ID.",
+        "tags": ["Events"],
+        "parameters": [
+          {
+            "name": "calendarId",
+            "in": "path",
+            "required": true,
+            "description": "Calendar identifier. To retrieve calendar IDs call the calendarList.list method. If you want to access the primary calendar of the currently logged in user, use the \"primary\" keyword.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "eventId",
+            "in": "path",
+            "required": true,
+            "description": "Event identifier.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "timeZone",
+            "in": "query",
+            "required": false,
+            "description": "Time zone used in the response. Optional. The default is the time zone of the calendar.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "maxAttendees",
+            "in": "query",
+            "required": false,
+            "description": "The maximum number of attendees to include in the response.",
+            "schema": { "type": "integer" }
+          }
+        ]
+      }
+    },
+    "/calendars/{calendarId}/events": {
+      "get": {
+        "operationId": "events_list",
+        "summary": "Returns events on the specified calendar.",
+        "tags": ["Events"],
+        "parameters": [
+          {
+            "name": "calendarId",
+            "in": "path",
+            "required": true,
+            "description": "Calendar identifier.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "timeMin",
+            "in": "query",
+            "required": false,
+            "description": "Lower bound (exclusive) for an event's end time to filter by. RFC3339 timestamp.",
+            "schema": { "type": "string", "format": "date-time" }
+          },
+          {
+            "name": "timeMax",
+            "in": "query",
+            "required": false,
+            "description": "Upper bound (exclusive) for an event's start time to filter by. RFC3339 timestamp.",
+            "schema": { "type": "string", "format": "date-time" }
+          },
+          {
+            "name": "maxResults",
+            "in": "query",
+            "required": false,
+            "description": "Maximum number of events returned on one result page.",
+            "schema": { "type": "integer", "default": 250 }
+          },
+          {
+            "name": "pageToken",
+            "in": "query",
+            "required": false,
+            "description": "Token specifying which result page to return.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "singleEvents",
+            "in": "query",
+            "required": false,
+            "description": "Whether to expand recurring events into instances and only return single one-off events and instances of recurring events, but not the underlying recurring events themselves.",
+            "schema": { "type": "boolean", "default": false }
+          },
+          {
+            "name": "orderBy",
+            "in": "query",
+            "required": false,
+            "description": "The order of the events returned in the result.",
+            "schema": { "type": "string", "enum": ["startTime", "updated"] }
+          }
+        ]
+      },
+      "post": {
+        "operationId": "events_insert",
+        "summary": "Creates an event.",
+        "tags": ["Events"],
+        "parameters": [
+          {
+            "name": "calendarId",
+            "in": "path",
+            "required": true,
+            "description": "Calendar identifier.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "sendUpdates",
+            "in": "query",
+            "required": false,
+            "description": "Whether to send notifications about the creation of the new event.",
+            "schema": { "type": "string", "enum": ["all", "externalOnly", "none"] }
+          },
+          {
+            "name": "conferenceDataVersion",
+            "in": "query",
+            "required": false,
+            "description": "Version number of conference data supported by the API client.",
+            "schema": { "type": "integer", "minimum": 0, "maximum": 1 }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "type": "object" }
+            }
+          }
+        }
+      }
+    },
+    "/calendars/{calendarId}": {
+      "get": {
+        "operationId": "calendars_get",
+        "summary": "Returns metadata for a calendar.",
+        "tags": ["Calendars"],
+        "parameters": [
+          {
+            "name": "calendarId",
+            "in": "path",
+            "required": true,
+            "description": "Calendar identifier.",
+            "schema": { "type": "string" }
+          }
+        ]
+      }
+    },
+    "/users/me/calendarList": {
+      "get": {
+        "operationId": "calendarList_list",
+        "summary": "Returns the calendars on the user's calendar list.",
+        "tags": ["CalendarList"],
+        "parameters": [
+          {
+            "name": "maxResults",
+            "in": "query",
+            "required": false,
+            "description": "Maximum number of entries returned on one result page.",
+            "schema": { "type": "integer" }
+          },
+          {
+            "name": "pageToken",
+            "in": "query",
+            "required": false,
+            "description": "Token specifying which result page to return.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "showHidden",
+            "in": "query",
+            "required": false,
+            "description": "Whether to show hidden entries.",
+            "schema": { "type": "boolean" }
+          }
+        ]
+      }
+    },
+    "/calendars/{calendarId}/events/quickAdd": {
+      "post": {
+        "operationId": "events_quickAdd",
+        "summary": "Creates an event based on a simple text string.",
+        "tags": ["Events"],
+        "parameters": [
+          {
+            "name": "calendarId",
+            "in": "path",
+            "required": true,
+            "description": "Calendar identifier.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "text",
+            "in": "query",
+            "required": true,
+            "description": "The text describing the event to be created.",
+            "schema": { "type": "string" }
+          }
+        ]
+      }
+    },
+    "/freeBusy": {
+      "post": {
+        "operationId": "freebusy_query",
+        "summary": "Returns free/busy information for a set of calendars.",
+        "tags": ["Freebusy"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "type": "object" }
+            }
+          }
+        }
+      }
+    },
+    "/calendars/{calendarId}/events/watch": {
+      "post": {
+        "operationId": "events_watch",
+        "summary": "Watch for changes to Events resources.",
+        "tags": ["Events"],
+        "parameters": [
+          {
+            "name": "calendarId",
+            "in": "path",
+            "required": true,
+            "description": "Calendar identifier.",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "type": "object" }
+            }
+          }
+        }
+      }
+    },
+    "/calendars/{calendarId}/acl": {
+      "get": {
+        "operationId": "acl_list",
+        "summary": "Returns the rules in the access control list for the calendar.",
+        "tags": ["Acl"],
+        "parameters": [
+          {
+            "name": "calendarId",
+            "in": "path",
+            "required": true,
+            "description": "Calendar identifier.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "maxResults",
+            "in": "query",
+            "required": false,
+            "description": "Maximum number of entries returned on one result page.",
+            "schema": { "type": "integer" }
+          },
+          {
+            "name": "pageToken",
+            "in": "query",
+            "required": false,
+            "description": "Token specifying which result page to return.",
+            "schema": { "type": "string" }
+          }
+        ]
+      }
+    },
+    "/channels/stop": {
+      "post": {
+        "operationId": "channels_stop",
+        "summary": "Stop watching resources through this channel.",
+        "tags": ["Channels"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "type": "object" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,72 @@
+{
+  "apiName": "Slack",
+  "toolCount": 7,
+  "hiddenEndpointCount": 4,
+  "tools": [
+    {
+      "name": "users_info",
+      "endpoints": [
+        "GET /users.info"
+      ],
+      "responseFieldCount": 14
+    },
+    {
+      "name": "users_list",
+      "endpoints": [
+        "GET /users.list"
+      ],
+      "responseFieldCount": 1
+    },
+    {
+      "name": "conversations_list",
+      "endpoints": [
+        "GET /conversations.list"
+      ],
+      "responseFieldCount": 1
+    },
+    {
+      "name": "emoji_list",
+      "endpoints": [
+        "GET /emoji.list"
+      ],
+      "responseFieldCount": 1
+    },
+    {
+      "name": "conversations_history",
+      "endpoints": [
+        "GET /conversations.history"
+      ],
+      "responseFieldCount": 1
+    },
+    {
+      "name": "conversations_info",
+      "endpoints": [
+        "GET /conversations.info"
+      ],
+      "responseFieldCount": 1
+    },
+    {
+      "name": "chat_post_message",
+      "endpoints": [
+        "POST /chat.postMessage"
+      ],
+      "responseFieldCount": 1
+    }
+  ],
+  "tokenSavings": {
+    "rows": [
+      {
+        "tool": "users_info",
+        "endpoint": "GET /users.info",
+        "rawBytes": 2517,
+        "leanBytes": 408,
+        "estimatedRawTokens": 630,
+        "estimatedLeanTokens": 102
+      }
+    ],
+    "rawTokens": 630,
+    "leanTokens": 102,
+    "savedTokens": 528,
+    "savedPercent": 84
+  }
+}

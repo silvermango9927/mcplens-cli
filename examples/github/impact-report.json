@@ -1,0 +1,72 @@
+{
+  "apiName": "GitHub",
+  "toolCount": 7,
+  "hiddenEndpointCount": 4,
+  "tools": [
+    {
+      "name": "issues_list",
+      "endpoints": [
+        "GET /repos/{owner}/{repo}/issues"
+      ],
+      "responseFieldCount": 1
+    },
+    {
+      "name": "issues_get",
+      "endpoints": [
+        "GET /repos/{owner}/{repo}/issues/{issue_number}"
+      ],
+      "responseFieldCount": 16
+    },
+    {
+      "name": "issues_list_comments",
+      "endpoints": [
+        "GET /repos/{owner}/{repo}/issues/{issue_number}/comments"
+      ],
+      "responseFieldCount": 1
+    },
+    {
+      "name": "issues_list_events",
+      "endpoints": [
+        "GET /repos/{owner}/{repo}/issues/{issue_number}/events"
+      ],
+      "responseFieldCount": 1
+    },
+    {
+      "name": "issues_list_reactions",
+      "endpoints": [
+        "GET /repos/{owner}/{repo}/issues/{issue_number}/reactions"
+      ],
+      "responseFieldCount": 1
+    },
+    {
+      "name": "issues_list_timeline",
+      "endpoints": [
+        "GET /repos/{owner}/{repo}/issues/{issue_number}/timeline"
+      ],
+      "responseFieldCount": 1
+    },
+    {
+      "name": "issues_create",
+      "endpoints": [
+        "POST /repos/{owner}/{repo}/issues"
+      ],
+      "responseFieldCount": 1
+    }
+  ],
+  "tokenSavings": {
+    "rows": [
+      {
+        "tool": "issues_get",
+        "endpoint": "GET /repos/{owner}/{repo}/issues/{issue_number}",
+        "rawBytes": 7784,
+        "leanBytes": 846,
+        "estimatedRawTokens": 1946,
+        "estimatedLeanTokens": 212
+      }
+    ],
+    "rawTokens": 1946,
+    "leanTokens": 212,
+    "savedTokens": 1734,
+    "savedPercent": 89
+  }
+}
