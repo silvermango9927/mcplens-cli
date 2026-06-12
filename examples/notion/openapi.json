@@ -1,0 +1,354 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Notion",
+    "description": "Notion API surface, with pages, databases, blocks, comments, users and assorted housekeeping endpoints.",
+    "version": "2022-06-28"
+  },
+  "servers": [
+    { "url": "https://api.notion.com" }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Notion integration token passed as a Bearer credential."
+      }
+    }
+  },
+  "security": [
+    { "bearerAuth": [] }
+  ],
+  "paths": {
+    "/v1/pages/{page_id}": {
+      "get": {
+        "operationId": "pages_get",
+        "summary": "Retrieve a page",
+        "description": "Retrieves a Page object using the ID specified.",
+        "tags": ["pages"],
+        "parameters": [
+          {
+            "name": "page_id",
+            "in": "path",
+            "required": true,
+            "description": "Identifier for a Notion page.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "filter_properties",
+            "in": "query",
+            "required": false,
+            "description": "A list of page property value IDs associated with the page.",
+            "schema": { "type": "array", "items": { "type": "string" } }
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "pages_update",
+        "summary": "Update page properties",
+        "description": "Updates the properties of a page in a database.",
+        "tags": ["pages"],
+        "parameters": [
+          {
+            "name": "page_id",
+            "in": "path",
+            "required": true,
+            "description": "Identifier for a Notion page.",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "properties": { "type": "object" },
+                  "archived": { "type": "boolean" },
+                  "in_trash": { "type": "boolean" },
+                  "icon": { "type": "object" },
+                  "cover": { "type": "object" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/pages/{page_id}/properties/{property_id}": {
+      "get": {
+        "operationId": "pages_properties_get",
+        "summary": "Retrieve a page property item",
+        "description": "Retrieves a property_item object for a given page_id and property_id.",
+        "tags": ["pages"],
+        "parameters": [
+          {
+            "name": "page_id",
+            "in": "path",
+            "required": true,
+            "description": "Identifier for a Notion page.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "property_id",
+            "in": "path",
+            "required": true,
+            "description": "Identifier for a page property.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "description": "For paginated properties, the max number of property item objects to return.",
+            "schema": { "type": "integer", "maximum": 100 }
+          },
+          {
+            "name": "start_cursor",
+            "in": "query",
+            "required": false,
+            "description": "For paginated properties, the cursor to start from.",
+            "schema": { "type": "string" }
+          }
+        ]
+      }
+    },
+    "/v1/pages": {
+      "post": {
+        "operationId": "pages_create",
+        "summary": "Create a page",
+        "description": "Creates a new page that is a child of an existing page or database.",
+        "tags": ["pages"],
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["parent", "properties"],
+                "properties": {
+                  "parent": { "type": "object" },
+                  "properties": { "type": "object" },
+                  "children": { "type": "array", "items": { "type": "object" } },
+                  "icon": { "type": "object" },
+                  "cover": { "type": "object" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/databases/{database_id}/query": {
+      "post": {
+        "operationId": "databases_query",
+        "summary": "Query a database",
+        "description": "Gets a list of Pages contained in the database, filtered and ordered according to the filter and sorts provided.",
+        "tags": ["databases"],
+        "parameters": [
+          {
+            "name": "database_id",
+            "in": "path",
+            "required": true,
+            "description": "Identifier for a Notion database.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "filter_properties",
+            "in": "query",
+            "required": false,
+            "description": "A list of page property value IDs associated with the database query.",
+            "schema": { "type": "array", "items": { "type": "string" } }
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "filter": { "type": "object" },
+                  "sorts": { "type": "array", "items": { "type": "object" } },
+                  "start_cursor": { "type": "string" },
+                  "page_size": { "type": "integer", "maximum": 100 }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/databases/{database_id}": {
+      "get": {
+        "operationId": "databases_get",
+        "summary": "Retrieve a database",
+        "description": "Retrieves a database object for the provided database ID.",
+        "tags": ["databases"],
+        "parameters": [
+          {
+            "name": "database_id",
+            "in": "path",
+            "required": true,
+            "description": "Identifier for a Notion database.",
+            "schema": { "type": "string" }
+          }
+        ]
+      }
+    },
+    "/v1/blocks/{block_id}/children": {
+      "get": {
+        "operationId": "blocks_children_list",
+        "summary": "Retrieve block children",
+        "description": "Returns a paginated array of child block objects contained in the block.",
+        "tags": ["blocks"],
+        "parameters": [
+          {
+            "name": "block_id",
+            "in": "path",
+            "required": true,
+            "description": "Identifier for a Notion block.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "description": "The number of items from the full list desired in the response.",
+            "schema": { "type": "integer", "maximum": 100 }
+          },
+          {
+            "name": "start_cursor",
+            "in": "query",
+            "required": false,
+            "description": "If supplied, returns a page of results starting after the cursor.",
+            "schema": { "type": "string" }
+          }
+        ]
+      }
+    },
+    "/v1/comments": {
+      "post": {
+        "operationId": "comments_create",
+        "summary": "Create a comment",
+        "description": "Creates a comment in a page or existing discussion thread.",
+        "tags": ["comments"],
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "parent": { "type": "object" },
+                  "discussion_id": { "type": "string" },
+                  "rich_text": { "type": "array", "items": { "type": "object" } }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/users": {
+      "get": {
+        "operationId": "users_list",
+        "summary": "List all users",
+        "description": "Returns a paginated list of Users for the workspace.",
+        "tags": ["users"],
+        "parameters": [
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "description": "The number of items from the full list desired in the response.",
+            "schema": { "type": "integer", "maximum": 100 }
+          },
+          {
+            "name": "start_cursor",
+            "in": "query",
+            "required": false,
+            "description": "If supplied, returns a page of results starting after the cursor.",
+            "schema": { "type": "string" }
+          }
+        ]
+      }
+    },
+    "/v1/oauth/token": {
+      "post": {
+        "operationId": "oauth_token_create",
+        "summary": "Create an OAuth access token",
+        "description": "Exchanges an authorization code for an access token during the OAuth flow.",
+        "tags": ["oauth"],
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "grant_type": { "type": "string" },
+                  "code": { "type": "string" },
+                  "redirect_uri": { "type": "string" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/file_uploads": {
+      "post": {
+        "operationId": "file_uploads_create",
+        "summary": "Create a file upload",
+        "description": "Initiates a file upload object that can later be attached to blocks and pages.",
+        "tags": ["uploads"],
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "mode": { "type": "string" },
+                  "filename": { "type": "string" },
+                  "content_type": { "type": "string" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/webhooks": {
+      "post": {
+        "operationId": "webhooks_create",
+        "summary": "Register a webhook subscription",
+        "description": "Registers a webhook subscription to receive workspace event notifications.",
+        "tags": ["webhooks"],
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "url": { "type": "string" },
+                  "event_types": { "type": "array", "items": { "type": "string" } }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

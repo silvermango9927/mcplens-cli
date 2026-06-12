@@ -1,0 +1,357 @@
+{
+  "agentifyVersion": 1,
+  "api": {
+    "name": "Stripe",
+    "baseUrl": "https://api.stripe.com",
+    "auth": {
+      "type": "bearer",
+      "envVar": "STRIPE_API_TOKEN"
+    }
+  },
+  "tools": [
+    {
+      "name": "charges_list",
+      "description": "List all charges",
+      "params": [
+        {
+          "name": "customer",
+          "in": "query",
+          "type": "string",
+          "required": false,
+          "description": "Only return charges for the customer specified by this customer ID."
+        },
+        {
+          "name": "limit",
+          "in": "query",
+          "type": "number",
+          "required": false,
+          "description": "A limit on the number of objects to be returned, between 1 and 100."
+        },
+        {
+          "name": "starting_after",
+          "in": "query",
+          "type": "string",
+          "required": false,
+          "description": "A cursor for use in pagination."
+        }
+      ],
+      "requests": [
+        {
+          "key": "main",
+          "method": "GET",
+          "path": "/v1/charges"
+        }
+      ],
+      "responseMap": [
+        {
+          "from": "id",
+          "to": "id",
+          "source": "main",
+          "reason": "Stable identifier if present"
+        }
+      ]
+    },
+    {
+      "name": "charges_get",
+      "description": "Retrieve a charge",
+      "params": [
+        {
+          "name": "charge",
+          "in": "path",
+          "type": "string",
+          "required": true,
+          "description": "Path parameter charge"
+        }
+      ],
+      "requests": [
+        {
+          "key": "main",
+          "method": "GET",
+          "path": "/v1/charges/{charge}"
+        }
+      ],
+      "responseMap": [
+        {
+          "from": "id",
+          "to": "id",
+          "source": "main",
+          "reason": "Stable identifier if present"
+        }
+      ]
+    },
+    {
+      "name": "customers_list",
+      "description": "List all customers",
+      "params": [
+        {
+          "name": "email",
+          "in": "query",
+          "type": "string",
+          "required": false,
+          "description": "A case-sensitive filter on the list based on the customer's email field."
+        },
+        {
+          "name": "limit",
+          "in": "query",
+          "type": "number",
+          "required": false,
+          "description": "A limit on the number of objects to be returned, between 1 and 100."
+        },
+        {
+          "name": "starting_after",
+          "in": "query",
+          "type": "string",
+          "required": false,
+          "description": "A cursor for use in pagination. An object ID that defines your place in the list."
+        },
+        {
+          "name": "ending_before",
+          "in": "query",
+          "type": "string",
+          "required": false,
+          "description": "A cursor for use in pagination. An object ID that defines your place in the list."
+        }
+      ],
+      "requests": [
+        {
+          "key": "main",
+          "method": "GET",
+          "path": "/v1/customers"
+        }
+      ],
+      "responseMap": [
+        {
+          "from": "id",
+          "to": "id",
+          "source": "main",
+          "reason": "Stable identifier if present"
+        }
+      ]
+    },
+    {
+      "name": "customers_get",
+      "description": "Retrieve a customer",
+      "params": [
+        {
+          "name": "customer",
+          "in": "path",
+          "type": "string",
+          "required": true,
+          "description": "Path parameter customer"
+        }
+      ],
+      "requests": [
+        {
+          "key": "main",
+          "method": "GET",
+          "path": "/v1/customers/{customer}"
+        }
+      ],
+      "responseMap": [
+        {
+          "from": "address.state",
+          "to": "state",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "created",
+          "to": "created",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "description",
+          "to": "description",
+          "source": "main",
+          "transform": "firstLine",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "id",
+          "to": "id",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "invoice_settings.custom_fields[].name",
+          "to": "custom_fields_name",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "name",
+          "to": "name",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "shipping.name",
+          "to": "shipping_name",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "sources.url",
+          "to": "url",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "tax_ids.data[].id",
+          "to": "data_id",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "tax_ids.data[].verification.status",
+          "to": "status",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "tax_ids.data[].verification.verified_name",
+          "to": "verified_name",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        }
+      ]
+    },
+    {
+      "name": "customers_sources_list",
+      "description": "List a customer's payment sources",
+      "params": [
+        {
+          "name": "customer",
+          "in": "path",
+          "type": "string",
+          "required": true,
+          "description": "Path parameter customer"
+        },
+        {
+          "name": "object",
+          "in": "query",
+          "type": "string",
+          "required": false,
+          "description": "Filter sources according to a particular object type."
+        },
+        {
+          "name": "limit",
+          "in": "query",
+          "type": "number",
+          "required": false,
+          "description": "A limit on the number of objects to be returned, between 1 and 100."
+        }
+      ],
+      "requests": [
+        {
+          "key": "main",
+          "method": "GET",
+          "path": "/v1/customers/{customer}/sources"
+        }
+      ],
+      "responseMap": [
+        {
+          "from": "id",
+          "to": "id",
+          "source": "main",
+          "reason": "Stable identifier if present"
+        }
+      ]
+    },
+    {
+      "name": "charges_refund_create",
+      "description": "Create a refund for a charge",
+      "params": [
+        {
+          "name": "charge",
+          "in": "path",
+          "type": "string",
+          "required": true,
+          "description": "Path parameter charge"
+        }
+      ],
+      "requests": [
+        {
+          "key": "main",
+          "method": "POST",
+          "path": "/v1/charges/{charge}/refund"
+        }
+      ],
+      "responseMap": [
+        {
+          "from": "id",
+          "to": "id",
+          "source": "main",
+          "reason": "Stable identifier if present"
+        }
+      ]
+    },
+    {
+      "name": "customers_create",
+      "description": "Create a customer",
+      "params": [],
+      "requests": [
+        {
+          "key": "main",
+          "method": "POST",
+          "path": "/v1/customers"
+        }
+      ],
+      "responseMap": [
+        {
+          "from": "id",
+          "to": "id",
+          "source": "main",
+          "reason": "Stable identifier if present"
+        }
+      ]
+    },
+    {
+      "name": "customers_tax_ids_create",
+      "description": "Create a customer tax ID",
+      "params": [
+        {
+          "name": "customer",
+          "in": "path",
+          "type": "string",
+          "required": true,
+          "description": "Path parameter customer"
+        }
+      ],
+      "requests": [
+        {
+          "key": "main",
+          "method": "POST",
+          "path": "/v1/customers/{customer}/tax_ids"
+        }
+      ],
+      "responseMap": [
+        {
+          "from": "id",
+          "to": "id",
+          "source": "main",
+          "reason": "Stable identifier if present"
+        }
+      ]
+    }
+  ],
+  "hiddenEndpoints": [
+    {
+      "endpoint": "POST /v1/admin/accounts/{account}/close",
+      "reason": "Operational/admin endpoint outside the V1 agent-useful toolset"
+    },
+    {
+      "endpoint": "POST /v1/oauth/token",
+      "reason": "Operational/admin endpoint outside the V1 agent-useful toolset"
+    },
+    {
+      "endpoint": "POST /v1/webhook_endpoints",
+      "reason": "Operational/admin endpoint outside the V1 agent-useful toolset"
+    },
+    {
+      "endpoint": "DELETE /v1/webhook_endpoints/{webhook_endpoint}",
+      "reason": "Operational/admin endpoint outside the V1 agent-useful toolset"
+    }
+  ]
+}

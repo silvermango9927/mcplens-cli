@@ -1,0 +1,374 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Slack",
+    "description": "Subset of the Slack Web API covering users and conversations.",
+    "version": "1.7.0"
+  },
+  "servers": [
+    { "url": "https://slack.com/api" }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Slack OAuth bearer token (e.g. xoxb-...)."
+      }
+    }
+  },
+  "security": [
+    { "bearerAuth": [] }
+  ],
+  "paths": {
+    "/users.info": {
+      "get": {
+        "operationId": "users_info",
+        "summary": "Get information about a user",
+        "tags": ["users"],
+        "parameters": [
+          {
+            "name": "user",
+            "in": "query",
+            "required": true,
+            "description": "User ID to get info on.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "include_locale",
+            "in": "query",
+            "required": false,
+            "description": "Set to true to receive the locale for this user.",
+            "schema": { "type": "boolean" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "User info response." }
+        }
+      }
+    },
+    "/users.list": {
+      "get": {
+        "operationId": "users_list",
+        "summary": "List all users in a Slack team",
+        "tags": ["users"],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "The maximum number of items to return.",
+            "schema": { "type": "integer", "default": 100 }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "description": "Pagination cursor for the next page of results.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "include_locale",
+            "in": "query",
+            "required": false,
+            "description": "Set to true to receive the locale for users.",
+            "schema": { "type": "boolean" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "List of users." }
+        }
+      }
+    },
+    "/conversations.history": {
+      "get": {
+        "operationId": "conversations_history",
+        "summary": "Fetch a conversation's history of messages and events",
+        "tags": ["conversations"],
+        "parameters": [
+          {
+            "name": "channel",
+            "in": "query",
+            "required": true,
+            "description": "Conversation ID to fetch history for.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "The maximum number of items to return.",
+            "schema": { "type": "integer", "default": 100 }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "description": "Pagination cursor for the next page of results.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "oldest",
+            "in": "query",
+            "required": false,
+            "description": "Only messages after this Unix timestamp will be included.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "latest",
+            "in": "query",
+            "required": false,
+            "description": "Only messages before this Unix timestamp will be included.",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Conversation history." }
+        }
+      }
+    },
+    "/conversations.list": {
+      "get": {
+        "operationId": "conversations_list",
+        "summary": "List all channels in a Slack team",
+        "tags": ["conversations"],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "The maximum number of items to return.",
+            "schema": { "type": "integer", "default": 100 }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "description": "Pagination cursor for the next page of results.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "types",
+            "in": "query",
+            "required": false,
+            "description": "Mix of channel types to include, comma separated.",
+            "schema": { "type": "string", "default": "public_channel" }
+          },
+          {
+            "name": "exclude_archived",
+            "in": "query",
+            "required": false,
+            "description": "Set to true to exclude archived channels.",
+            "schema": { "type": "boolean" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "List of channels." }
+        }
+      }
+    },
+    "/conversations.info": {
+      "get": {
+        "operationId": "conversations_info",
+        "summary": "Retrieve information about a conversation",
+        "tags": ["conversations"],
+        "parameters": [
+          {
+            "name": "channel",
+            "in": "query",
+            "required": true,
+            "description": "Conversation ID to learn more about.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "include_locale",
+            "in": "query",
+            "required": false,
+            "description": "Set to true to receive the locale for this conversation.",
+            "schema": { "type": "boolean" }
+          },
+          {
+            "name": "include_num_members",
+            "in": "query",
+            "required": false,
+            "description": "Set to true to include the member count for the channel.",
+            "schema": { "type": "boolean" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Conversation info." }
+        }
+      }
+    },
+    "/chat.postMessage": {
+      "post": {
+        "operationId": "chat_postMessage",
+        "summary": "Send a message to a channel",
+        "tags": ["chat"],
+        "parameters": [
+          {
+            "name": "channel",
+            "in": "query",
+            "required": true,
+            "description": "Channel, private group, or IM channel to send message to.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "text",
+            "in": "query",
+            "required": false,
+            "description": "The formatted text of the message to be published.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "thread_ts",
+            "in": "query",
+            "required": false,
+            "description": "Provide another message's ts value to make this a reply.",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Message posted." }
+        }
+      }
+    },
+    "/emoji.list": {
+      "get": {
+        "operationId": "emoji_list",
+        "summary": "List custom emoji for a team",
+        "tags": ["emoji"],
+        "parameters": [
+          {
+            "name": "include_categories",
+            "in": "query",
+            "required": false,
+            "description": "Set to true to return a list of emoji categories.",
+            "schema": { "type": "boolean" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Custom emoji map (mostly image URLs)." }
+        }
+      }
+    },
+    "/files.upload": {
+      "post": {
+        "operationId": "files_upload",
+        "summary": "Upload or create a file (deprecated, heavy multipart)",
+        "tags": ["files"],
+        "parameters": [
+          {
+            "name": "channels",
+            "in": "query",
+            "required": false,
+            "description": "Comma-separated list of channel names or IDs where the file will be shared.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "filename",
+            "in": "query",
+            "required": false,
+            "description": "Filename of file.",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Uploaded file metadata." }
+        }
+      }
+    },
+    "/admin.users.list": {
+      "get": {
+        "operationId": "admin_users_list",
+        "summary": "List users on a workspace (Enterprise Grid admin scope)",
+        "tags": ["admin"],
+        "parameters": [
+          {
+            "name": "team_id",
+            "in": "query",
+            "required": true,
+            "description": "The ID of the team.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Limit for how many users to be retrieved per page.",
+            "schema": { "type": "integer", "default": 100 }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "description": "Set cursor to next_cursor returned by the previous call.",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "List of workspace users (admin)." }
+        }
+      }
+    },
+    "/oauth.v2.access": {
+      "post": {
+        "operationId": "oauth_v2_access",
+        "summary": "Exchange a temporary OAuth verifier code for an access token",
+        "tags": ["oauth"],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "query",
+            "required": false,
+            "description": "The code param returned via the OAuth callback.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "redirect_uri",
+            "in": "query",
+            "required": false,
+            "description": "This must match the originally submitted URI (if one was sent).",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "OAuth access token response." }
+        }
+      }
+    },
+    "/users.setPhoto": {
+      "post": {
+        "operationId": "users_setPhoto",
+        "summary": "Set the user profile photo / avatar",
+        "tags": ["users"],
+        "parameters": [
+          {
+            "name": "crop_w",
+            "in": "query",
+            "required": false,
+            "description": "Width/height of crop region (always square), in pixels.",
+            "schema": { "type": "integer" }
+          },
+          {
+            "name": "crop_x",
+            "in": "query",
+            "required": false,
+            "description": "X coordinate of top-left corner of crop region.",
+            "schema": { "type": "integer" }
+          },
+          {
+            "name": "crop_y",
+            "in": "query",
+            "required": false,
+            "description": "Y coordinate of top-left corner of crop region.",
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Avatar updated." }
+        }
+      }
+    }
+  }
+}

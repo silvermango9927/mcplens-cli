@@ -1,0 +1,74 @@
+{
+  "endpoint": "GET /users.info",
+  "response": {
+    "ok": true,
+    "user": {
+      "id": "W012A3CDE",
+      "team_id": "T012AB3C4",
+      "name": "spengler",
+      "deleted": false,
+      "color": "9f69e7",
+      "real_name": "Egon Spengler",
+      "tz": "America/Los_Angeles",
+      "tz_label": "Pacific Daylight Time",
+      "tz_offset": -25200,
+      "profile": {
+        "avatar_hash": "ge3b51ca72de",
+        "status_text": "Print is dead",
+        "status_emoji": ":books:",
+        "status_emoji_display_info": [
+          {
+            "emoji_name": "books",
+            "display_alias": ":books:",
+            "display_url": "https://emoji.slack-edge.com/T012AB3C4/books/8badf00d1234abcd.png",
+            "unicode": "1f4da"
+          }
+        ],
+        "status_expiration": 0,
+        "real_name": "Egon Spengler",
+        "display_name": "spengler",
+        "real_name_normalized": "Egon Spengler",
+        "display_name_normalized": "spengler",
+        "email": "spengler@ghostbusters.example.com",
+        "image_24": "https://secure.gravatar.com/avatar/e3b51ca72d3e23.jpg?s=24&d=https%3A%2F%2Fa.slack-edge.com%2Fdf10d%2Fimg%2Favatars%2Fava_0024-24.png",
+        "image_32": "https://secure.gravatar.com/avatar/e3b51ca72d3e23.jpg?s=32&d=https%3A%2F%2Fa.slack-edge.com%2Fdf10d%2Fimg%2Favatars%2Fava_0024-32.png",
+        "image_48": "https://secure.gravatar.com/avatar/e3b51ca72d3e23.jpg?s=48&d=https%3A%2F%2Fa.slack-edge.com%2Fdf10d%2Fimg%2Favatars%2Fava_0024-48.png",
+        "image_72": "https://secure.gravatar.com/avatar/e3b51ca72d3e23.jpg?s=72&d=https%3A%2F%2Fa.slack-edge.com%2Fdf10d%2Fimg%2Favatars%2Fava_0024-72.png",
+        "image_192": "https://secure.gravatar.com/avatar/e3b51ca72d3e23.jpg?s=192&d=https%3A%2F%2Fa.slack-edge.com%2Fdf10d%2Fimg%2Favatars%2Fava_0024-192.png",
+        "image_512": "https://secure.gravatar.com/avatar/e3b51ca72d3e23.jpg?s=512&d=https%3A%2F%2Fa.slack-edge.com%2Fdf10d%2Fimg%2Favatars%2Fava_0024-512.png",
+        "image_1024": "https://secure.gravatar.com/avatar/e3b51ca72d3e23.jpg?s=1024&d=https%3A%2F%2Fa.slack-edge.com%2Fdf10d%2Fimg%2Favatars%2Fava_0024-512.png",
+        "image_original": "https://secure.gravatar.com/avatar/e3b51ca72d3e23.jpg?s=original&d=https%3A%2F%2Fa.slack-edge.com%2Fdf10d%2Fimg%2Favatars%2Fava_0024.png",
+        "first_name": "Egon",
+        "last_name": "Spengler",
+        "title": "Director of Paranormal Research",
+        "phone": "+1 (555) 0123 4567",
+        "skype": "egon.spengler.ghostbusters",
+        "team": "T012AB3C4",
+        "is_custom_image": true,
+        "huddle_state": "default_unset",
+        "huddle_state_expiration_ts": 0,
+        "status_text_canonical": "",
+        "fields": {
+          "Xf0DAH0E0LMS": {
+            "value": "Ghostbusters HQ, 14 N. Moore St, New York",
+            "alt": ""
+          },
+          "Xf0DALU05PV1": {
+            "value": "Containment Unit Operations",
+            "alt": ""
+          }
+        }
+      },
+      "is_admin": true,
+      "is_owner": false,
+      "is_primary_owner": false,
+      "is_restricted": false,
+      "is_ultra_restricted": false,
+      "is_bot": false,
+      "is_app_user": false,
+      "updated": 1502138686,
+      "has_2fa": true,
+      "locale": "en-US"
+    }
+  }
+}

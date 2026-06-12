@@ -1,0 +1,197 @@
+{
+  "endpoint": "GET /v1/pages/{page_id}",
+  "response": {
+    "object": "page",
+    "id": "59833787-2cf9-4fdf-8782-e53db20768a5",
+    "created_time": "2024-03-17T19:10:00.000Z",
+    "last_edited_time": "2026-06-11T22:34:00.000Z",
+    "created_by": {
+      "object": "user",
+      "id": "ee5f0f84-409a-440f-983a-a5315961c6e4"
+    },
+    "last_edited_by": {
+      "object": "user",
+      "id": "0c3e9826-b8f7-4f73-927d-2caaf86f1103"
+    },
+    "cover": {
+      "type": "external",
+      "external": {
+        "url": "https://images.unsplash.com/photo-1521516927280-844a8c3e0b95"
+      }
+    },
+    "icon": {
+      "type": "emoji",
+      "emoji": "📄"
+    },
+    "parent": {
+      "type": "database_id",
+      "database_id": "d9824bdc-8445-4327-be8b-5b47500af6ce"
+    },
+    "archived": false,
+    "in_trash": false,
+    "properties": {
+      "Name": {
+        "id": "title",
+        "type": "title",
+        "title": [
+          {
+            "type": "text",
+            "text": {
+              "content": "Q3 Launch Retrospective",
+              "link": null
+            },
+            "annotations": {
+              "bold": false,
+              "italic": false,
+              "strikethrough": false,
+              "underline": false,
+              "code": false,
+              "color": "default"
+            },
+            "plain_text": "Q3 Launch Retrospective",
+            "href": null
+          }
+        ]
+      },
+      "Status": {
+        "id": "%5E%7C%3Ag",
+        "type": "select",
+        "select": {
+          "id": "d1234abc-9f12-4a3b-8c45-77e9b0a1c2d3",
+          "name": "In Progress",
+          "color": "yellow"
+        }
+      },
+      "Tags": {
+        "id": "%40%3Dr%3E",
+        "type": "multi_select",
+        "multi_select": [
+          {
+            "id": "a1b2c3d4-1111-2222-3333-444455556666",
+            "name": "engineering",
+            "color": "blue"
+          },
+          {
+            "id": "b2c3d4e5-2222-3333-4444-555566667777",
+            "name": "launch",
+            "color": "green"
+          },
+          {
+            "id": "c3d4e5f6-3333-4444-5555-666677778888",
+            "name": "priority",
+            "color": "red"
+          }
+        ]
+      },
+      "Date": {
+        "id": "Q%3CdW",
+        "type": "date",
+        "date": {
+          "start": "2026-06-01",
+          "end": "2026-06-30",
+          "time_zone": null
+        }
+      },
+      "Summary": {
+        "id": "z%5E%7Co",
+        "type": "rich_text",
+        "rich_text": [
+          {
+            "type": "text",
+            "text": {
+              "content": "Retro covering the cross-functional launch, including ",
+              "link": null
+            },
+            "annotations": {
+              "bold": false,
+              "italic": false,
+              "strikethrough": false,
+              "underline": false,
+              "code": false,
+              "color": "default"
+            },
+            "plain_text": "Retro covering the cross-functional launch, including ",
+            "href": null
+          },
+          {
+            "type": "text",
+            "text": {
+              "content": "blockers",
+              "link": null
+            },
+            "annotations": {
+              "bold": true,
+              "italic": false,
+              "strikethrough": false,
+              "underline": false,
+              "code": false,
+              "color": "red"
+            },
+            "plain_text": "blockers",
+            "href": null
+          },
+          {
+            "type": "text",
+            "text": {
+              "content": " and follow-ups.",
+              "link": null
+            },
+            "annotations": {
+              "bold": false,
+              "italic": true,
+              "strikethrough": false,
+              "underline": false,
+              "code": false,
+              "color": "default"
+            },
+            "plain_text": " and follow-ups.",
+            "href": null
+          }
+        ]
+      },
+      "Person": {
+        "id": "%7Bf%5D%3E",
+        "type": "people",
+        "people": [
+          {
+            "object": "user",
+            "id": "ee5f0f84-409a-440f-983a-a5315961c6e4",
+            "name": "Dana Whitfield",
+            "avatar_url": "https://s3-us-west-2.amazonaws.com/public.notion-static.com/avatars/dana.png",
+            "type": "person",
+            "person": {
+              "email": "dana.whitfield@valsea.app"
+            }
+          },
+          {
+            "object": "user",
+            "id": "0c3e9826-b8f7-4f73-927d-2caaf86f1103",
+            "name": "Marcus Lindgren",
+            "avatar_url": "https://s3-us-west-2.amazonaws.com/public.notion-static.com/avatars/marcus.png",
+            "type": "person",
+            "person": {
+              "email": "marcus.lindgren@valsea.app"
+            }
+          }
+        ]
+      },
+      "URL": {
+        "id": "Hm%3Cx",
+        "type": "url",
+        "url": "https://github.com/valsea/launch/pull/482"
+      },
+      "Estimate": {
+        "id": "n%2Cma",
+        "type": "number",
+        "number": 13
+      },
+      "Reviewed": {
+        "id": "p%5BqW",
+        "type": "checkbox",
+        "checkbox": true
+      }
+    },
+    "url": "https://www.notion.so/Q3-Launch-Retrospective-5983378727cf94fdf8782e53db20768a5",
+    "public_url": "https://valsea.notion.site/Q3-Launch-Retrospective-5983378727cf94fdf8782e53db20768a5"
+  }
+}

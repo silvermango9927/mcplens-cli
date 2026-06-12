@@ -1,0 +1,451 @@
+{
+  "agentifyVersion": 1,
+  "api": {
+    "name": "GitHub",
+    "baseUrl": "https://api.github.com",
+    "auth": {
+      "type": "bearer",
+      "envVar": "GITHUB_API_TOKEN"
+    }
+  },
+  "tools": [
+    {
+      "name": "issues_list",
+      "description": "List repository issues",
+      "params": [
+        {
+          "name": "owner",
+          "in": "path",
+          "type": "string",
+          "required": true,
+          "description": "Path parameter owner"
+        },
+        {
+          "name": "repo",
+          "in": "path",
+          "type": "string",
+          "required": true,
+          "description": "Path parameter repo"
+        },
+        {
+          "name": "state",
+          "in": "query",
+          "type": "string",
+          "required": false,
+          "description": "Indicates the state of the issues to return."
+        },
+        {
+          "name": "labels",
+          "in": "query",
+          "type": "string",
+          "required": false,
+          "description": "A comma-separated list of label names."
+        },
+        {
+          "name": "sort",
+          "in": "query",
+          "type": "string",
+          "required": false,
+          "description": ""
+        },
+        {
+          "name": "per_page",
+          "in": "query",
+          "type": "number",
+          "required": false,
+          "description": "The number of results per page (max 100)."
+        },
+        {
+          "name": "page",
+          "in": "query",
+          "type": "number",
+          "required": false,
+          "description": ""
+        }
+      ],
+      "requests": [
+        {
+          "key": "main",
+          "method": "GET",
+          "path": "/repos/{owner}/{repo}/issues"
+        }
+      ],
+      "responseMap": [
+        {
+          "from": "id",
+          "to": "id",
+          "source": "main",
+          "reason": "Stable identifier if present"
+        }
+      ]
+    },
+    {
+      "name": "issues_get",
+      "description": "Get an issue",
+      "params": [
+        {
+          "name": "owner",
+          "in": "path",
+          "type": "string",
+          "required": true,
+          "description": "Path parameter owner"
+        },
+        {
+          "name": "repo",
+          "in": "path",
+          "type": "string",
+          "required": true,
+          "description": "Path parameter repo"
+        },
+        {
+          "name": "issue_number",
+          "in": "path",
+          "type": "string",
+          "required": true,
+          "description": "Path parameter issue_number"
+        }
+      ],
+      "requests": [
+        {
+          "key": "main",
+          "method": "GET",
+          "path": "/repos/{owner}/{repo}/issues/{issue_number}"
+        }
+      ],
+      "responseMap": [
+        {
+          "from": "assignee.events_url",
+          "to": "events_url",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "assignee.followers_url",
+          "to": "followers_url",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "assignee.following_url",
+          "to": "following_url",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "assignee.gists_url",
+          "to": "gists_url",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "assignee.html_url",
+          "to": "html_url",
+          "source": "main",
+          "transform": "stripHtml",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "assignee.id",
+          "to": "assignee_id",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "assignee.login",
+          "to": "assignee_login",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "assignee.node_id",
+          "to": "node_id",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "assignee.organizations_url",
+          "to": "organizations_url",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "assignee.received_events_url",
+          "to": "received_events_url",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "assignee.repos_url",
+          "to": "repos_url",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "assignee.starred_url",
+          "to": "starred_url",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "assignee.subscriptions_url",
+          "to": "subscriptions_url",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "assignee.url",
+          "to": "url",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "assignee.avatar_url",
+          "to": "avatar_url",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "assignee.gravatar_id",
+          "to": "gravatar_id",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        }
+      ]
+    },
+    {
+      "name": "issues_list_comments",
+      "description": "List issue comments",
+      "params": [
+        {
+          "name": "owner",
+          "in": "path",
+          "type": "string",
+          "required": true,
+          "description": "Path parameter owner"
+        },
+        {
+          "name": "repo",
+          "in": "path",
+          "type": "string",
+          "required": true,
+          "description": "Path parameter repo"
+        },
+        {
+          "name": "issue_number",
+          "in": "path",
+          "type": "string",
+          "required": true,
+          "description": "Path parameter issue_number"
+        },
+        {
+          "name": "per_page",
+          "in": "query",
+          "type": "number",
+          "required": false,
+          "description": ""
+        }
+      ],
+      "requests": [
+        {
+          "key": "main",
+          "method": "GET",
+          "path": "/repos/{owner}/{repo}/issues/{issue_number}/comments"
+        }
+      ],
+      "responseMap": [
+        {
+          "from": "id",
+          "to": "id",
+          "source": "main",
+          "reason": "Stable identifier if present"
+        }
+      ]
+    },
+    {
+      "name": "issues_list_events",
+      "description": "List issue events",
+      "params": [
+        {
+          "name": "owner",
+          "in": "path",
+          "type": "string",
+          "required": true,
+          "description": "Path parameter owner"
+        },
+        {
+          "name": "repo",
+          "in": "path",
+          "type": "string",
+          "required": true,
+          "description": "Path parameter repo"
+        },
+        {
+          "name": "issue_number",
+          "in": "path",
+          "type": "string",
+          "required": true,
+          "description": "Path parameter issue_number"
+        }
+      ],
+      "requests": [
+        {
+          "key": "main",
+          "method": "GET",
+          "path": "/repos/{owner}/{repo}/issues/{issue_number}/events"
+        }
+      ],
+      "responseMap": [
+        {
+          "from": "id",
+          "to": "id",
+          "source": "main",
+          "reason": "Stable identifier if present"
+        }
+      ]
+    },
+    {
+      "name": "issues_list_reactions",
+      "description": "List reactions for an issue",
+      "params": [
+        {
+          "name": "owner",
+          "in": "path",
+          "type": "string",
+          "required": true,
+          "description": "Path parameter owner"
+        },
+        {
+          "name": "repo",
+          "in": "path",
+          "type": "string",
+          "required": true,
+          "description": "Path parameter repo"
+        },
+        {
+          "name": "issue_number",
+          "in": "path",
+          "type": "string",
+          "required": true,
+          "description": "Path parameter issue_number"
+        },
+        {
+          "name": "content",
+          "in": "query",
+          "type": "string",
+          "required": false,
+          "description": "Filter by reaction type."
+        }
+      ],
+      "requests": [
+        {
+          "key": "main",
+          "method": "GET",
+          "path": "/repos/{owner}/{repo}/issues/{issue_number}/reactions"
+        }
+      ],
+      "responseMap": [
+        {
+          "from": "id",
+          "to": "id",
+          "source": "main",
+          "reason": "Stable identifier if present"
+        }
+      ]
+    },
+    {
+      "name": "issues_list_timeline",
+      "description": "List timeline events for an issue",
+      "params": [
+        {
+          "name": "owner",
+          "in": "path",
+          "type": "string",
+          "required": true,
+          "description": "Path parameter owner"
+        },
+        {
+          "name": "repo",
+          "in": "path",
+          "type": "string",
+          "required": true,
+          "description": "Path parameter repo"
+        },
+        {
+          "name": "issue_number",
+          "in": "path",
+          "type": "string",
+          "required": true,
+          "description": "Path parameter issue_number"
+        }
+      ],
+      "requests": [
+        {
+          "key": "main",
+          "method": "GET",
+          "path": "/repos/{owner}/{repo}/issues/{issue_number}/timeline"
+        }
+      ],
+      "responseMap": [
+        {
+          "from": "id",
+          "to": "id",
+          "source": "main",
+          "reason": "Stable identifier if present"
+        }
+      ]
+    },
+    {
+      "name": "issues_create",
+      "description": "Create an issue",
+      "params": [
+        {
+          "name": "owner",
+          "in": "path",
+          "type": "string",
+          "required": true,
+          "description": "Path parameter owner"
+        },
+        {
+          "name": "repo",
+          "in": "path",
+          "type": "string",
+          "required": true,
+          "description": "Path parameter repo"
+        }
+      ],
+      "requests": [
+        {
+          "key": "main",
+          "method": "POST",
+          "path": "/repos/{owner}/{repo}/issues"
+        }
+      ],
+      "responseMap": [
+        {
+          "from": "id",
+          "to": "id",
+          "source": "main",
+          "reason": "Stable identifier if present"
+        }
+      ]
+    }
+  ],
+  "hiddenEndpoints": [
+    {
+      "endpoint": "POST /repos/{owner}/{repo}/admin/issues/restore",
+      "reason": "Operational/admin endpoint outside the V1 agent-useful toolset"
+    },
+    {
+      "endpoint": "POST /repos/{owner}/{repo}/hooks",
+      "reason": "Operational/admin endpoint outside the V1 agent-useful toolset"
+    },
+    {
+      "endpoint": "GET /repos/{owner}/{repo}/issues/{issue_number}/audit-log",
+      "reason": "Operational/admin endpoint outside the V1 agent-useful toolset"
+    },
+    {
+      "endpoint": "GET /repos/{owner}/{repo}/issues/{issue_number}/labels/avatar",
+      "reason": "UI asset or binary payload; usually not agent-relevant"
+    }
+  ]
+}

@@ -1,0 +1,288 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Stripe",
+    "description": "The Stripe REST API. Provides programmatic access to Customers, Charges, and related billing primitives.",
+    "version": "2024-06-20"
+  },
+  "servers": [
+    { "url": "https://api.stripe.com" }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Use your secret API key as a bearer token."
+      }
+    }
+  },
+  "security": [
+    { "bearerAuth": [] }
+  ],
+  "paths": {
+    "/v1/customers/{customer}": {
+      "get": {
+        "operationId": "customers_get",
+        "summary": "Retrieve a customer",
+        "description": "Retrieves a Customer object given its unique identifier.",
+        "tags": ["Customers"],
+        "parameters": [
+          {
+            "name": "customer",
+            "in": "path",
+            "required": true,
+            "description": "The identifier of the customer to be retrieved.",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "A Customer object." }
+        }
+      }
+    },
+    "/v1/customers": {
+      "get": {
+        "operationId": "customers_list",
+        "summary": "List all customers",
+        "description": "Returns a list of your customers. The customers are returned sorted by creation date, with the most recent customers appearing first.",
+        "tags": ["Customers"],
+        "parameters": [
+          {
+            "name": "email",
+            "in": "query",
+            "required": false,
+            "description": "A case-sensitive filter on the list based on the customer's email field.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "A limit on the number of objects to be returned, between 1 and 100.",
+            "schema": { "type": "integer", "minimum": 1, "maximum": 100, "default": 10 }
+          },
+          {
+            "name": "starting_after",
+            "in": "query",
+            "required": false,
+            "description": "A cursor for use in pagination. An object ID that defines your place in the list.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "ending_before",
+            "in": "query",
+            "required": false,
+            "description": "A cursor for use in pagination. An object ID that defines your place in the list.",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "A paginated list of Customer objects." }
+        }
+      },
+      "post": {
+        "operationId": "customers_create",
+        "summary": "Create a customer",
+        "description": "Creates a new customer object.",
+        "tags": ["Customers"],
+        "parameters": [],
+        "responses": {
+          "200": { "description": "The newly created Customer object." }
+        }
+      }
+    },
+    "/v1/charges/{charge}": {
+      "get": {
+        "operationId": "charges_get",
+        "summary": "Retrieve a charge",
+        "description": "Retrieves the details of a charge that has previously been created.",
+        "tags": ["Charges"],
+        "parameters": [
+          {
+            "name": "charge",
+            "in": "path",
+            "required": true,
+            "description": "The identifier of the charge to be retrieved.",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "A Charge object." }
+        }
+      }
+    },
+    "/v1/charges": {
+      "get": {
+        "operationId": "charges_list",
+        "summary": "List all charges",
+        "description": "Returns a list of charges you've previously created. The charges are returned in sorted order, with the most recent charges appearing first.",
+        "tags": ["Charges"],
+        "parameters": [
+          {
+            "name": "customer",
+            "in": "query",
+            "required": false,
+            "description": "Only return charges for the customer specified by this customer ID.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "A limit on the number of objects to be returned, between 1 and 100.",
+            "schema": { "type": "integer", "minimum": 1, "maximum": 100, "default": 10 }
+          },
+          {
+            "name": "starting_after",
+            "in": "query",
+            "required": false,
+            "description": "A cursor for use in pagination.",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "A paginated list of Charge objects." }
+        }
+      }
+    },
+    "/v1/webhook_endpoints": {
+      "post": {
+        "operationId": "webhook_endpoints_create",
+        "summary": "Create a webhook endpoint",
+        "description": "A webhook endpoint must have a url and a list of enabled_events. This endpoint is for internal account configuration and should not be exposed to agents.",
+        "tags": ["Webhooks"],
+        "parameters": [],
+        "responses": {
+          "200": { "description": "The newly created WebhookEndpoint object." }
+        }
+      }
+    },
+    "/v1/customers/{customer}/sources": {
+      "get": {
+        "operationId": "customers_sources_list",
+        "summary": "List a customer's payment sources",
+        "description": "List sources for a specified customer. This is a legacy/internal endpoint superseded by Payment Methods.",
+        "tags": ["Customers", "Sources"],
+        "parameters": [
+          {
+            "name": "customer",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the customer whose sources will be retrieved.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "object",
+            "in": "query",
+            "required": false,
+            "description": "Filter sources according to a particular object type.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "A limit on the number of objects to be returned, between 1 and 100.",
+            "schema": { "type": "integer", "minimum": 1, "maximum": 100, "default": 10 }
+          }
+        ],
+        "responses": {
+          "200": { "description": "A paginated list of source objects." }
+        }
+      }
+    },
+    "/v1/customers/{customer}/tax_ids": {
+      "post": {
+        "operationId": "customers_tax_ids_create",
+        "summary": "Create a customer tax ID",
+        "description": "Creates a new tax_id object for a customer.",
+        "tags": ["Customers", "TaxIDs"],
+        "parameters": [
+          {
+            "name": "customer",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the customer the tax ID will be added to.",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "The newly created TaxID object." }
+        }
+      }
+    },
+    "/v1/oauth/token": {
+      "post": {
+        "operationId": "oauth_token_create",
+        "summary": "Generate an OAuth access token",
+        "description": "Use this endpoint in the Stripe Connect OAuth flow to obtain an access token. Internal connect plumbing; not for agent use.",
+        "tags": ["OAuth", "Connect"],
+        "parameters": [],
+        "responses": {
+          "200": { "description": "An OAuth token response." }
+        }
+      }
+    },
+    "/v1/webhook_endpoints/{webhook_endpoint}": {
+      "delete": {
+        "operationId": "webhook_endpoints_delete",
+        "summary": "Delete a webhook endpoint",
+        "description": "You can also delete webhook endpoints via the webhook endpoint management page of the Stripe dashboard. Internal admin operation.",
+        "tags": ["Webhooks"],
+        "parameters": [
+          {
+            "name": "webhook_endpoint",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the webhook endpoint to delete.",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "The deleted WebhookEndpoint object." }
+        }
+      }
+    },
+    "/v1/charges/{charge}/refund": {
+      "post": {
+        "operationId": "charges_refund_create",
+        "summary": "Create a refund for a charge",
+        "description": "Capture or refund the payment of an existing, uncaptured or captured charge.",
+        "tags": ["Charges", "Refunds"],
+        "parameters": [
+          {
+            "name": "charge",
+            "in": "path",
+            "required": true,
+            "description": "The identifier of the charge to refund.",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "The refunded Charge object." }
+        }
+      }
+    },
+    "/v1/admin/accounts/{account}/close": {
+      "post": {
+        "operationId": "admin_accounts_close",
+        "summary": "Close a connected account (admin)",
+        "description": "Administrative endpoint to permanently close a connected account. Restricted internal admin operation; must be hidden from agents.",
+        "tags": ["Admin", "Connect"],
+        "parameters": [
+          {
+            "name": "account",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the connected account to close.",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "The closed Account object." }
+        }
+      }
+    }
+  }
+}

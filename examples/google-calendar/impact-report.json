@@ -1,0 +1,93 @@
+{
+  "apiName": "Google Calendar",
+  "toolCount": 10,
+  "hiddenEndpointCount": 0,
+  "tools": [
+    {
+      "name": "calendar_list_list",
+      "endpoints": [
+        "GET /users/me/calendarList"
+      ],
+      "responseFieldCount": 1
+    },
+    {
+      "name": "calendars_get",
+      "endpoints": [
+        "GET /calendars/{calendarId}"
+      ],
+      "responseFieldCount": 1
+    },
+    {
+      "name": "acl_list",
+      "endpoints": [
+        "GET /calendars/{calendarId}/acl"
+      ],
+      "responseFieldCount": 1
+    },
+    {
+      "name": "events_list",
+      "endpoints": [
+        "GET /calendars/{calendarId}/events"
+      ],
+      "responseFieldCount": 1
+    },
+    {
+      "name": "events_get",
+      "endpoints": [
+        "GET /calendars/{calendarId}/events/{eventId}"
+      ],
+      "responseFieldCount": 14
+    },
+    {
+      "name": "events_insert",
+      "endpoints": [
+        "POST /calendars/{calendarId}/events"
+      ],
+      "responseFieldCount": 1
+    },
+    {
+      "name": "events_quick_add",
+      "endpoints": [
+        "POST /calendars/{calendarId}/events/quickAdd"
+      ],
+      "responseFieldCount": 1
+    },
+    {
+      "name": "events_watch",
+      "endpoints": [
+        "POST /calendars/{calendarId}/events/watch"
+      ],
+      "responseFieldCount": 1
+    },
+    {
+      "name": "channels_stop",
+      "endpoints": [
+        "POST /channels/stop"
+      ],
+      "responseFieldCount": 1
+    },
+    {
+      "name": "freebusy_query",
+      "endpoints": [
+        "POST /freeBusy"
+      ],
+      "responseFieldCount": 1
+    }
+  ],
+  "tokenSavings": {
+    "rows": [
+      {
+        "tool": "events_get",
+        "endpoint": "GET /calendars/{calendarId}/events/{eventId}",
+        "rawBytes": 3669,
+        "leanBytes": 673,
+        "estimatedRawTokens": 918,
+        "estimatedLeanTokens": 169
+      }
+    ],
+    "rawTokens": 918,
+    "leanTokens": 169,
+    "savedTokens": 749,
+    "savedPercent": 82
+  }
+}

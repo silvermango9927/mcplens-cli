@@ -1,0 +1,409 @@
+{
+  "agentifyVersion": 1,
+  "api": {
+    "name": "Notion",
+    "baseUrl": "https://api.notion.com",
+    "auth": {
+      "type": "bearer",
+      "envVar": "NOTION_API_TOKEN"
+    }
+  },
+  "tools": [
+    {
+      "name": "users_list",
+      "description": "List all users",
+      "params": [
+        {
+          "name": "page_size",
+          "in": "query",
+          "type": "number",
+          "required": false,
+          "description": "The number of items from the full list desired in the response."
+        },
+        {
+          "name": "start_cursor",
+          "in": "query",
+          "type": "string",
+          "required": false,
+          "description": "If supplied, returns a page of results starting after the cursor."
+        }
+      ],
+      "requests": [
+        {
+          "key": "main",
+          "method": "GET",
+          "path": "/v1/users"
+        }
+      ],
+      "responseMap": [
+        {
+          "from": "id",
+          "to": "id",
+          "source": "main",
+          "reason": "Stable identifier if present"
+        }
+      ]
+    },
+    {
+      "name": "blocks_children_list",
+      "description": "Retrieve block children",
+      "params": [
+        {
+          "name": "block_id",
+          "in": "path",
+          "type": "string",
+          "required": true,
+          "description": "Path parameter block_id"
+        },
+        {
+          "name": "page_size",
+          "in": "query",
+          "type": "number",
+          "required": false,
+          "description": "The number of items from the full list desired in the response."
+        },
+        {
+          "name": "start_cursor",
+          "in": "query",
+          "type": "string",
+          "required": false,
+          "description": "If supplied, returns a page of results starting after the cursor."
+        }
+      ],
+      "requests": [
+        {
+          "key": "main",
+          "method": "GET",
+          "path": "/v1/blocks/{block_id}/children"
+        }
+      ],
+      "responseMap": [
+        {
+          "from": "id",
+          "to": "id",
+          "source": "main",
+          "reason": "Stable identifier if present"
+        }
+      ]
+    },
+    {
+      "name": "databases_get",
+      "description": "Retrieve a database",
+      "params": [
+        {
+          "name": "database_id",
+          "in": "path",
+          "type": "string",
+          "required": true,
+          "description": "Path parameter database_id"
+        }
+      ],
+      "requests": [
+        {
+          "key": "main",
+          "method": "GET",
+          "path": "/v1/databases/{database_id}"
+        }
+      ],
+      "responseMap": [
+        {
+          "from": "id",
+          "to": "id",
+          "source": "main",
+          "reason": "Stable identifier if present"
+        }
+      ]
+    },
+    {
+      "name": "pages_get",
+      "description": "Retrieve a page",
+      "params": [
+        {
+          "name": "page_id",
+          "in": "path",
+          "type": "string",
+          "required": true,
+          "description": "Path parameter page_id"
+        },
+        {
+          "name": "filter_properties",
+          "in": "query",
+          "type": "string[]",
+          "required": false,
+          "description": "A list of page property value IDs associated with the page."
+        }
+      ],
+      "requests": [
+        {
+          "key": "main",
+          "method": "GET",
+          "path": "/v1/pages/{page_id}"
+        }
+      ],
+      "responseMap": [
+        {
+          "from": "properties.Name.id",
+          "to": "Name_id",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "properties.Name.title[].annotations.bold",
+          "to": "bold",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "properties.Name.title[].annotations.code",
+          "to": "code",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "properties.Name.title[].annotations.italic",
+          "to": "italic",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "properties.Name.title[].annotations.strikethrough",
+          "to": "strikethrough",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "properties.Name.title[].annotations.underline",
+          "to": "underline",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "properties.Name.title[].href",
+          "to": "href",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "properties.Name.title[].plain_text",
+          "to": "plain_text",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "properties.Name.title[].text.content",
+          "to": "content",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "properties.Name.title[].text.link",
+          "to": "link",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "properties.Name.title[].type",
+          "to": "type",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "properties.Status.id",
+          "to": "Status_id",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "properties.Status.select.id",
+          "to": "select_id",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "properties.Status.select.name",
+          "to": "select_name",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "properties.Summary.id",
+          "to": "Summary_id",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "properties.URL.id",
+          "to": "URL_id",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        }
+      ]
+    },
+    {
+      "name": "pages_properties_get",
+      "description": "Retrieve a page property item",
+      "params": [
+        {
+          "name": "page_id",
+          "in": "path",
+          "type": "string",
+          "required": true,
+          "description": "Path parameter page_id"
+        },
+        {
+          "name": "property_id",
+          "in": "path",
+          "type": "string",
+          "required": true,
+          "description": "Path parameter property_id"
+        },
+        {
+          "name": "page_size",
+          "in": "query",
+          "type": "number",
+          "required": false,
+          "description": "For paginated properties, the max number of property item objects to return."
+        },
+        {
+          "name": "start_cursor",
+          "in": "query",
+          "type": "string",
+          "required": false,
+          "description": "For paginated properties, the cursor to start from."
+        }
+      ],
+      "requests": [
+        {
+          "key": "main",
+          "method": "GET",
+          "path": "/v1/pages/{page_id}/properties/{property_id}"
+        }
+      ],
+      "responseMap": [
+        {
+          "from": "id",
+          "to": "id",
+          "source": "main",
+          "reason": "Stable identifier if present"
+        }
+      ]
+    },
+    {
+      "name": "comments_create",
+      "description": "Create a comment",
+      "params": [],
+      "requests": [
+        {
+          "key": "main",
+          "method": "POST",
+          "path": "/v1/comments"
+        }
+      ],
+      "responseMap": [
+        {
+          "from": "id",
+          "to": "id",
+          "source": "main",
+          "reason": "Stable identifier if present"
+        }
+      ]
+    },
+    {
+      "name": "databases_query",
+      "description": "Query a database",
+      "params": [
+        {
+          "name": "database_id",
+          "in": "path",
+          "type": "string",
+          "required": true,
+          "description": "Path parameter database_id"
+        },
+        {
+          "name": "filter_properties",
+          "in": "query",
+          "type": "string[]",
+          "required": false,
+          "description": "A list of page property value IDs associated with the database query."
+        }
+      ],
+      "requests": [
+        {
+          "key": "main",
+          "method": "POST",
+          "path": "/v1/databases/{database_id}/query"
+        }
+      ],
+      "responseMap": [
+        {
+          "from": "id",
+          "to": "id",
+          "source": "main",
+          "reason": "Stable identifier if present"
+        }
+      ]
+    },
+    {
+      "name": "pages_create",
+      "description": "Create a page",
+      "params": [],
+      "requests": [
+        {
+          "key": "main",
+          "method": "POST",
+          "path": "/v1/pages"
+        }
+      ],
+      "responseMap": [
+        {
+          "from": "id",
+          "to": "id",
+          "source": "main",
+          "reason": "Stable identifier if present"
+        }
+      ]
+    },
+    {
+      "name": "pages_update",
+      "description": "Update page properties",
+      "params": [
+        {
+          "name": "page_id",
+          "in": "path",
+          "type": "string",
+          "required": true,
+          "description": "Path parameter page_id"
+        }
+      ],
+      "requests": [
+        {
+          "key": "main",
+          "method": "PATCH",
+          "path": "/v1/pages/{page_id}"
+        }
+      ],
+      "responseMap": [
+        {
+          "from": "id",
+          "to": "id",
+          "source": "main",
+          "reason": "Stable identifier if present"
+        }
+      ]
+    }
+  ],
+  "hiddenEndpoints": [
+    {
+      "endpoint": "POST /v1/file_uploads",
+      "reason": "UI asset or binary payload; usually not agent-relevant"
+    },
+    {
+      "endpoint": "POST /v1/oauth/token",
+      "reason": "Operational/admin endpoint outside the V1 agent-useful toolset"
+    },
+    {
+      "endpoint": "POST /v1/webhooks",
+      "reason": "Operational/admin endpoint outside the V1 agent-useful toolset"
+    }
+  ]
+}

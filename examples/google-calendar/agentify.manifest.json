@@ -1,0 +1,469 @@
+{
+  "agentifyVersion": 1,
+  "api": {
+    "name": "Google Calendar",
+    "baseUrl": "https://www.googleapis.com/calendar/v3",
+    "auth": {
+      "type": "bearer",
+      "envVar": "GOOGLE_CALENDAR_API_TOKEN"
+    }
+  },
+  "tools": [
+    {
+      "name": "calendar_list_list",
+      "description": "Returns the calendars on the user's calendar list.",
+      "params": [
+        {
+          "name": "maxResults",
+          "in": "query",
+          "type": "number",
+          "required": false,
+          "description": "Maximum number of entries returned on one result page."
+        },
+        {
+          "name": "pageToken",
+          "in": "query",
+          "type": "string",
+          "required": false,
+          "description": "Token specifying which result page to return."
+        },
+        {
+          "name": "showHidden",
+          "in": "query",
+          "type": "boolean",
+          "required": false,
+          "description": "Whether to show hidden entries."
+        }
+      ],
+      "requests": [
+        {
+          "key": "main",
+          "method": "GET",
+          "path": "/users/me/calendarList"
+        }
+      ],
+      "responseMap": [
+        {
+          "from": "id",
+          "to": "id",
+          "source": "main",
+          "reason": "Stable identifier if present"
+        }
+      ]
+    },
+    {
+      "name": "calendars_get",
+      "description": "Returns metadata for a calendar.",
+      "params": [
+        {
+          "name": "calendarId",
+          "in": "path",
+          "type": "string",
+          "required": true,
+          "description": "Path parameter calendarId"
+        }
+      ],
+      "requests": [
+        {
+          "key": "main",
+          "method": "GET",
+          "path": "/calendars/{calendarId}"
+        }
+      ],
+      "responseMap": [
+        {
+          "from": "id",
+          "to": "id",
+          "source": "main",
+          "reason": "Stable identifier if present"
+        }
+      ]
+    },
+    {
+      "name": "acl_list",
+      "description": "Returns the rules in the access control list for the calendar.",
+      "params": [
+        {
+          "name": "calendarId",
+          "in": "path",
+          "type": "string",
+          "required": true,
+          "description": "Path parameter calendarId"
+        },
+        {
+          "name": "maxResults",
+          "in": "query",
+          "type": "number",
+          "required": false,
+          "description": "Maximum number of entries returned on one result page."
+        },
+        {
+          "name": "pageToken",
+          "in": "query",
+          "type": "string",
+          "required": false,
+          "description": "Token specifying which result page to return."
+        }
+      ],
+      "requests": [
+        {
+          "key": "main",
+          "method": "GET",
+          "path": "/calendars/{calendarId}/acl"
+        }
+      ],
+      "responseMap": [
+        {
+          "from": "id",
+          "to": "id",
+          "source": "main",
+          "reason": "Stable identifier if present"
+        }
+      ]
+    },
+    {
+      "name": "events_list",
+      "description": "Returns events on the specified calendar.",
+      "params": [
+        {
+          "name": "calendarId",
+          "in": "path",
+          "type": "string",
+          "required": true,
+          "description": "Path parameter calendarId"
+        },
+        {
+          "name": "timeMin",
+          "in": "query",
+          "type": "string",
+          "required": false,
+          "description": "Lower bound (exclusive) for an event's end time to filter by. RFC3339 timestamp."
+        },
+        {
+          "name": "timeMax",
+          "in": "query",
+          "type": "string",
+          "required": false,
+          "description": "Upper bound (exclusive) for an event's start time to filter by. RFC3339 timestamp."
+        },
+        {
+          "name": "maxResults",
+          "in": "query",
+          "type": "number",
+          "required": false,
+          "description": "Maximum number of events returned on one result page."
+        },
+        {
+          "name": "pageToken",
+          "in": "query",
+          "type": "string",
+          "required": false,
+          "description": "Token specifying which result page to return."
+        },
+        {
+          "name": "singleEvents",
+          "in": "query",
+          "type": "boolean",
+          "required": false,
+          "description": "Whether to expand recurring events into instances and only return single one-off events and instances of recurring events, but not the underlying recurring events themselves."
+        },
+        {
+          "name": "orderBy",
+          "in": "query",
+          "type": "string",
+          "required": false,
+          "description": "The order of the events returned in the result."
+        }
+      ],
+      "requests": [
+        {
+          "key": "main",
+          "method": "GET",
+          "path": "/calendars/{calendarId}/events"
+        }
+      ],
+      "responseMap": [
+        {
+          "from": "id",
+          "to": "id",
+          "source": "main",
+          "reason": "Stable identifier if present"
+        }
+      ]
+    },
+    {
+      "name": "events_get",
+      "description": "Returns an event based on its Google Calendar ID.",
+      "params": [
+        {
+          "name": "calendarId",
+          "in": "path",
+          "type": "string",
+          "required": true,
+          "description": "Path parameter calendarId"
+        },
+        {
+          "name": "eventId",
+          "in": "path",
+          "type": "string",
+          "required": true,
+          "description": "Path parameter eventId"
+        },
+        {
+          "name": "timeZone",
+          "in": "query",
+          "type": "string",
+          "required": false,
+          "description": "Time zone used in the response. Optional. The default is the time zone of the calendar."
+        },
+        {
+          "name": "maxAttendees",
+          "in": "query",
+          "type": "number",
+          "required": false,
+          "description": "The maximum number of attendees to include in the response."
+        }
+      ],
+      "requests": [
+        {
+          "key": "main",
+          "method": "GET",
+          "path": "/calendars/{calendarId}/events/{eventId}"
+        }
+      ],
+      "responseMap": [
+        {
+          "from": "attendees[].displayName",
+          "to": "displayName",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "attendees[].id",
+          "to": "attendees_id",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "attendees[].responseStatus",
+          "to": "responseStatus",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "conferenceData.conferenceId",
+          "to": "conferenceId",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "conferenceData.conferenceSolution.key.type",
+          "to": "type",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "conferenceData.conferenceSolution.name",
+          "to": "conferenceSolution_name",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "created",
+          "to": "created",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "creator.id",
+          "to": "creator_id",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "description",
+          "to": "description",
+          "source": "main",
+          "transform": "firstLine",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "extendedProperties.private.internalMeetingId",
+          "to": "internalMeetingId",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "iCalUID",
+          "to": "iCalUID",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "id",
+          "to": "id",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "organizer.id",
+          "to": "organizer_id",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "recurringEventId",
+          "to": "recurringEventId",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        }
+      ]
+    },
+    {
+      "name": "events_insert",
+      "description": "Creates an event.",
+      "params": [
+        {
+          "name": "calendarId",
+          "in": "path",
+          "type": "string",
+          "required": true,
+          "description": "Path parameter calendarId"
+        },
+        {
+          "name": "sendUpdates",
+          "in": "query",
+          "type": "string",
+          "required": false,
+          "description": "Whether to send notifications about the creation of the new event."
+        },
+        {
+          "name": "conferenceDataVersion",
+          "in": "query",
+          "type": "number",
+          "required": false,
+          "description": "Version number of conference data supported by the API client."
+        }
+      ],
+      "requests": [
+        {
+          "key": "main",
+          "method": "POST",
+          "path": "/calendars/{calendarId}/events"
+        }
+      ],
+      "responseMap": [
+        {
+          "from": "id",
+          "to": "id",
+          "source": "main",
+          "reason": "Stable identifier if present"
+        }
+      ]
+    },
+    {
+      "name": "events_quick_add",
+      "description": "Creates an event based on a simple text string.",
+      "params": [
+        {
+          "name": "calendarId",
+          "in": "path",
+          "type": "string",
+          "required": true,
+          "description": "Path parameter calendarId"
+        },
+        {
+          "name": "text",
+          "in": "query",
+          "type": "string",
+          "required": true,
+          "description": "The text describing the event to be created."
+        }
+      ],
+      "requests": [
+        {
+          "key": "main",
+          "method": "POST",
+          "path": "/calendars/{calendarId}/events/quickAdd"
+        }
+      ],
+      "responseMap": [
+        {
+          "from": "id",
+          "to": "id",
+          "source": "main",
+          "reason": "Stable identifier if present"
+        }
+      ]
+    },
+    {
+      "name": "events_watch",
+      "description": "Watch for changes to Events resources.",
+      "params": [
+        {
+          "name": "calendarId",
+          "in": "path",
+          "type": "string",
+          "required": true,
+          "description": "Path parameter calendarId"
+        }
+      ],
+      "requests": [
+        {
+          "key": "main",
+          "method": "POST",
+          "path": "/calendars/{calendarId}/events/watch"
+        }
+      ],
+      "responseMap": [
+        {
+          "from": "id",
+          "to": "id",
+          "source": "main",
+          "reason": "Stable identifier if present"
+        }
+      ]
+    },
+    {
+      "name": "channels_stop",
+      "description": "Stop watching resources through this channel.",
+      "params": [],
+      "requests": [
+        {
+          "key": "main",
+          "method": "POST",
+          "path": "/channels/stop"
+        }
+      ],
+      "responseMap": [
+        {
+          "from": "id",
+          "to": "id",
+          "source": "main",
+          "reason": "Stable identifier if present"
+        }
+      ]
+    },
+    {
+      "name": "freebusy_query",
+      "description": "Returns free/busy information for a set of calendars.",
+      "params": [],
+      "requests": [
+        {
+          "key": "main",
+          "method": "POST",
+          "path": "/freeBusy"
+        }
+      ],
+      "responseMap": [
+        {
+          "from": "id",
+          "to": "id",
+          "source": "main",
+          "reason": "Stable identifier if present"
+        }
+      ]
+    }
+  ],
+  "hiddenEndpoints": []
+}
