@@ -5,17 +5,18 @@ import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
 
 export interface VerifyResult {
   ok: boolean
+  stage: 'install' | 'build' | 'smoke'
   output: string
 }
 
 export async function verifyGeneratedProject(projectDir: string): Promise<VerifyResult> {
-  const install = await run('npm', ['install'], projectDir)
+  const install = await run('install', 'npm', ['install'], projectDir)
   if (!install.ok) return install
-  const build = await run('npm', ['run', 'build'], projectDir)
+  const build = await run('build', 'npm', ['run', 'build'], projectDir)
   if (!build.ok) return build
   const smoke = await smokeTest(projectDir)
   if (!smoke.ok) return smoke
-  return { ok: true, output: [install.output, build.output, smoke.output].join('\n') }
+  return { ok: true, stage: 'smoke', output: [install.output, build.output, smoke.output].join('\n') }
 }
 
 async function smokeTest(projectDir: string): Promise<VerifyResult> {
@@ -30,14 +31,14 @@ async function smokeTest(projectDir: string): Promise<VerifyResult> {
     await client.connect(transport)
     const tools = await client.listTools()
     await client.close()
-    return { ok: tools.tools.length > 0, output: `MCP smoke test listed ${tools.tools.length} tools` }
+    return { ok: tools.tools.length > 0, stage: 'smoke', output: `MCP smoke test listed ${tools.tools.length} tools` }
   } catch (err) {
     await client.close().catch(() => undefined)
-    return { ok: false, output: err instanceof Error ? err.message : String(err) }
+    return { ok: false, stage: 'smoke', output: err instanceof Error ? err.message : String(err) }
   }
 }
 
-function run(command: string, args: string[], cwd: string): Promise<VerifyResult> {
+function run(stage: VerifyResult['stage'], command: string, args: string[], cwd: string): Promise<VerifyResult> {
   return new Promise((resolve) => {
     const child = spawn(command, args, { cwd, stdio: ['ignore', 'pipe', 'pipe'] })
     let output = ''
@@ -47,7 +48,7 @@ function run(command: string, args: string[], cwd: string): Promise<VerifyResult
     child.stderr.on('data', (chunk) => {
       output += chunk.toString()
     })
-    child.on('close', (code) => resolve({ ok: code === 0, output }))
-    child.on('error', (err) => resolve({ ok: false, output: err.message }))
+    child.on('close', (code) => resolve({ ok: code === 0, stage, output }))
+    child.on('error', (err) => resolve({ ok: false, stage, output: err.message }))
   })
 }

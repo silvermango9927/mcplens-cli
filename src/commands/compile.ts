@@ -1,6 +1,7 @@
 import path from 'node:path'
 import { analyzeApi } from '../analyzer/analyzer.js'
 import { assembleManifest } from '../manifest/assemble.js'
+import { buildImpactSummary } from '../report/impact.js'
 import { formatTokenSavingsReport, estimateTokenSavings } from '../report/tokens.js'
 import { loadSamples } from '../sampler/sampler.js'
 import { loadOpenApiSpec } from '../spec/loader.js'
@@ -13,6 +14,7 @@ export interface CompileCommandOptions {
   out?: string
   liveSamples?: boolean
   offline?: boolean
+  impactReport?: string
 }
 
 export async function runCompileCommand(options: CompileCommandOptions): Promise<void> {
@@ -33,5 +35,11 @@ export async function runCompileCommand(options: CompileCommandOptions): Promise
   const out = path.resolve(options.out ?? 'agentify.manifest.json')
   await writeJsonFile(out, manifest)
   console.log(`Wrote ${out}`)
-  console.log(formatTokenSavingsReport(estimateTokenSavings(manifest, samples)))
+  const tokenSavings = estimateTokenSavings(manifest, samples)
+  console.log(formatTokenSavingsReport(tokenSavings))
+  if (options.impactReport) {
+    const impactPath = path.resolve(options.impactReport)
+    await writeJsonFile(impactPath, buildImpactSummary(manifest, samples))
+    console.log(`Wrote impact report ${impactPath}`)
+  }
 }

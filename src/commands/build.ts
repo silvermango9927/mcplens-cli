@@ -19,14 +19,31 @@ export async function runBuildCommand(options: BuildCommandOptions): Promise<voi
   console.log(`Generated ${outDir}`)
   if (options.verify === false) return
 
-  const result = await verifyGeneratedProject(outDir)
+  let result = await verifyGeneratedProject(outDir)
   if (result.ok) {
     console.log(result.output)
     console.log('Generated project verified.')
     return
   }
-  const repair = await repairGeneratedProject()
-  throw new Error(`Generated project verification failed.\n${result.output}\n${repair.reason}`)
+
+  if (result.stage === 'build') {
+    for (let attempt = 1; attempt <= 2 && !result.ok && result.stage === 'build'; attempt++) {
+      const repair = await repairGeneratedProject(outDir, result.output)
+      if (!repair.repaired) {
+        throw new Error(`Generated project verification failed.\n${result.output}\n${repair.reason}`)
+      }
+      console.warn(`Repaired generated project (${attempt}/2): ${repair.files.join(', ')}`)
+      result = await verifyGeneratedProject(outDir)
+    }
+  }
+
+  if (result.ok) {
+    console.log(result.output)
+    console.log('Generated project verified.')
+    return
+  }
+
+  throw new Error(`Generated project verification failed.\n${result.output}`)
 }
 
 function slug(value: string): string {
