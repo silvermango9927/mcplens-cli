@@ -20,12 +20,15 @@ Compile a spec plus optional recorded samples:
 npm run cli -- compile \
   --spec tests/fixtures/bloated-api/openapi.json \
   --samples tests/fixtures/bloated-api/samples \
+  --impact-report impact-report.json \
   --out agentify.manifest.json
 ```
 
 If `ANTHROPIC_API_KEY` is set, `compile` calls Anthropic for the build-time analysis.
 Without it, or with `--offline`, the CLI uses deterministic heuristics so the MVP can be
 tested locally.
+Use `--impact-report <path>` to write a JSON report with tool counts, hidden endpoint
+counts, and token savings estimates for matched samples.
 
 Generate and verify a standalone MCP server:
 

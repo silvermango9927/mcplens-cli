@@ -19,6 +19,7 @@ program
   .option('--out <path>', 'Manifest output path', 'agentify.manifest.json')
   .option('--live-samples', 'Best-effort live capture of simple GET endpoints')
   .option('--offline', 'Use deterministic heuristic analysis instead of Anthropic')
+  .option('--impact-report <path>', 'Write a machine-readable token savings and curation report')
   .action(async (opts) => runCompileCommand(opts))
 
 program
