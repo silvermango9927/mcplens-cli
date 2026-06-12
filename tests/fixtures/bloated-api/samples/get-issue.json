@@ -1,0 +1,40 @@
+{
+  "endpoint": "GET /issues/{id}",
+  "response": {
+    "id": "ISS-123",
+    "key": "TRACK-123",
+    "self": "https://api.trackly.example/issues/ISS-123",
+    "fields": {
+      "summary": "Checkout fails for annual plans",
+      "status": {
+        "id": "st-2",
+        "name": "In Progress",
+        "iconUrl": "https://cdn.trackly.example/status/in-progress.svg",
+        "color": "blue"
+      },
+      "description": "Payment form errors after plan switch.\nFull reproduction steps are attached.",
+      "created": "2026-06-01T12:00:00Z",
+      "updated": "2026-06-10T09:30:00Z",
+      "assignee": {
+        "id": "u-1",
+        "name": "Priya Shah",
+        "avatarUrls": {
+          "48x48": "https://cdn.trackly.example/avatar/u-1.png"
+        }
+      },
+      "reporter": {
+        "id": "u-2",
+        "name": "Sam Rivera",
+        "avatarUrls": {
+          "48x48": "https://cdn.trackly.example/avatar/u-2.png"
+        }
+      },
+      "renderedHtml": "<section><p>Payment form errors after plan switch.</p></section>",
+      "layout": {
+        "panels": [
+          { "x": 0, "y": 0, "width": 12, "color": "cyan" }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Trackly",
+    "version": "1.0.0"
+  },
+  "servers": [{ "url": "https://api.trackly.example" }],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": { "type": "http", "scheme": "bearer" }
+    }
+  },
+  "security": [{ "bearerAuth": [] }],
+  "paths": {
+    "/issues/{id}": {
+      "get": {
+        "operationId": "getIssue",
+        "summary": "Fetch one issue",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" }, "description": "Issue id" }
+        ],
+        "responses": { "200": { "description": "Issue" } }
+      }
+    },
+    "/issues": {
+      "get": {
+        "operationId": "searchIssues",
+        "summary": "Search issues",
+        "parameters": [
+          { "name": "q", "in": "query", "schema": { "type": "string" }, "description": "Search query" },
+          { "name": "limit", "in": "query", "schema": { "type": "integer" }, "description": "Maximum results" }
+        ],
+        "responses": { "200": { "description": "Issue list" } }
+      }
+    },
+    "/avatars/{id}": {
+      "get": {
+        "operationId": "getAvatar",
+        "summary": "Fetch avatar image metadata",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "Avatar metadata" } }
+      }
+    },
+    "/webhooks": {
+      "post": {
+        "operationId": "createWebhook",
+        "summary": "Create webhook",
+        "responses": { "200": { "description": "Webhook" } }
+      }
+    }
+  }
+}
