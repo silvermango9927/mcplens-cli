@@ -15,7 +15,7 @@
       "endpoints": [
         "GET /repos/{owner}/{repo}/issues/{issue_number}"
       ],
-      "responseFieldCount": 16
+      "responseFieldCount": 12
     },
     {
       "name": "issues_list_comments",
@@ -59,14 +59,14 @@
         "tool": "issues_get",
         "endpoint": "GET /repos/{owner}/{repo}/issues/{issue_number}",
         "rawBytes": 7784,
-        "leanBytes": 846,
+        "leanBytes": 1296,
         "estimatedRawTokens": 1946,
-        "estimatedLeanTokens": 212
+        "estimatedLeanTokens": 324
       }
     ],
     "rawTokens": 1946,
-    "leanTokens": 212,
-    "savedTokens": 1734,
-    "savedPercent": 89
+    "leanTokens": 324,
+    "savedTokens": 1622,
+    "savedPercent": 83
   }
 }

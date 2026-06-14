@@ -29,7 +29,7 @@
       "endpoints": [
         "GET /v1/pages/{page_id}"
       ],
-      "responseFieldCount": 16
+      "responseFieldCount": 15
     },
     {
       "name": "pages_properties_get",
@@ -73,14 +73,14 @@
         "tool": "pages_get",
         "endpoint": "GET /v1/pages/{page_id}",
         "rawBytes": 3138,
-        "leanBytes": 379,
+        "leanBytes": 457,
         "estimatedRawTokens": 785,
-        "estimatedLeanTokens": 95
+        "estimatedLeanTokens": 115
       }
     ],
     "rawTokens": 785,
-    "leanTokens": 95,
-    "savedTokens": 690,
-    "savedPercent": 88
+    "leanTokens": 115,
+    "savedTokens": 670,
+    "savedPercent": 85
   }
 }

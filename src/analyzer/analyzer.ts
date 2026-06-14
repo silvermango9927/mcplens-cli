@@ -130,13 +130,28 @@ function collectLeaves(value: unknown, prefix = ''): string[] {
 
 function fieldScore(path: string): number {
   const lower = path.toLowerCase()
+  const parts = lower.split(/[.[\]]+/).filter(Boolean)
+  const tokens = lower.split(/[.[\]_]+/).filter(Boolean)
+  const leaf = parts.at(-1) ?? lower
   let score = 0
-  for (const good of ['id', 'key', 'number', 'name', 'title', 'summary', 'status', 'state', 'description', 'body', 'url', 'html_url', 'created', 'updated', 'assignee', 'author', 'owner', 'login']) {
-    if (lower.split(/[.[\]]+/).includes(good) || lower.endsWith(good)) score += 5
+
+  for (const good of ['title', 'summary', 'status', 'state', 'description', 'body', 'email', 'start', 'end', 'datetime', 'date', 'time', 'location']) {
+    if (tokens.includes(good) || leaf === good) score += 9
   }
-  for (const bad of ['avatar', 'icon', 'color', 'style', 'self', 'links', '_links', 'rendered', 'html', 'metadata', 'schema']) {
+  for (const good of ['id', 'key', 'number', 'name', 'created', 'updated', 'assignee', 'author', 'owner', 'login', 'displayname', 'display_name', 'real_name']) {
+    if (tokens.includes(good) || leaf === good) score += 5
+  }
+  for (const bad of ['avatar', 'icon', 'color', 'style', 'self', 'links', '_links', 'rendered', 'metadata', 'schema']) {
     if (lower.includes(bad)) score -= 5
   }
+  if (leaf.endsWith('url') && leaf !== 'html_url') score -= 8
+  if (leaf === 'href' || leaf === 'link') score -= 4
+  if (parts.includes('annotations')) score -= 8
+  if (parts.includes('private')) score -= 6
+  if (parts.includes('profile') && /image_\d+|avatar|hash/.test(lower)) score -= 8
+  if (parts.length === 1) score += 7
+  else if (parts.length === 2) score += 3
+  if (parts.length >= 4) score -= 2
   if (lower.length > 90) score -= 2
   return score
 }
@@ -146,6 +161,10 @@ function leanName(path: string): string {
   const last = parts.at(-1) ?? path
   const prev = parts.at(-2)
   if (prev === 'status' && last === 'name') return 'status'
+  if (prev === 'start' || prev === 'end') return `${prev}_${last}`
+  if (prev === 'select' && last === 'name') return 'status'
+  if (prev === 'text' && last === 'content') return 'title'
+  if (last === 'plain_text') return prev === 'title' ? 'title' : 'plain_text'
   const raw = ['id', 'name', 'login'].includes(last) && prev ? `${prev}_${last}` : last
   return raw.replace(/[^a-zA-Z0-9]+/g, '_').replace(/^_+|_+$/g, '')
 }
@@ -153,7 +172,6 @@ function leanName(path: string): string {
 function transformFor(path: string): ResponseMapEntry['transform'] {
   const lower = path.toLowerCase()
   if (lower.includes('html')) return 'stripHtml'
-  if (lower.includes('description') || lower.includes('body')) return 'firstLine'
   return undefined
 }
 

@@ -8,7 +8,7 @@
       "endpoints": [
         "GET /users.info"
       ],
-      "responseFieldCount": 14
+      "responseFieldCount": 15
     },
     {
       "name": "users_list",
@@ -59,14 +59,14 @@
         "tool": "users_info",
         "endpoint": "GET /users.info",
         "rawBytes": 2517,
-        "leanBytes": 408,
+        "leanBytes": 417,
         "estimatedRawTokens": 630,
-        "estimatedLeanTokens": 102
+        "estimatedLeanTokens": 105
       }
     ],
     "rawTokens": 630,
-    "leanTokens": 102,
-    "savedTokens": 528,
-    "savedPercent": 84
+    "leanTokens": 105,
+    "savedTokens": 525,
+    "savedPercent": 83
   }
 }
