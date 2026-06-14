@@ -53,18 +53,35 @@ export const AuthSchema = z.discriminatedUnion('type', [
 
 export const HiddenEndpointSchema = z.object({ endpoint: z.string().min(1), reason: z.string().default('') })
 
-export const ManifestSchema = z.object({
-  agentifyVersion: z.literal(1),
-  api: z.object({ name: z.string().min(1), baseUrl: z.string().url(), auth: AuthSchema }),
-  tools: z.array(ToolSchema).min(1),
-  hiddenEndpoints: z.array(HiddenEndpointSchema).default([])
-})
+function rejectDuplicateToolNames(tools: { name: string }[], ctx: z.RefinementCtx): void {
+  const seen = new Set<string>()
+  for (const tool of tools) {
+    if (seen.has(tool.name)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `tool names must be unique: "${tool.name}"`
+      })
+    }
+    seen.add(tool.name)
+  }
+}
+
+export const ManifestSchema = z
+  .object({
+    agentifyVersion: z.literal(1),
+    api: z.object({ name: z.string().min(1), baseUrl: z.string().url(), auth: AuthSchema }),
+    tools: z.array(ToolSchema).min(1),
+    hiddenEndpoints: z.array(HiddenEndpointSchema).default([])
+  })
+  .superRefine((manifest, ctx) => rejectDuplicateToolNames(manifest.tools, ctx))
 
 // What the LLM is allowed to produce — everything else is assembled in code.
-export const PartialAnalysisSchema = z.object({
-  tools: z.array(ToolSchema).min(1),
-  hiddenEndpoints: z.array(HiddenEndpointSchema).default([])
-})
+export const PartialAnalysisSchema = z
+  .object({
+    tools: z.array(ToolSchema).min(1),
+    hiddenEndpoints: z.array(HiddenEndpointSchema).default([])
+  })
+  .superRefine((analysis, ctx) => rejectDuplicateToolNames(analysis.tools, ctx))
 
 export type Manifest = z.infer<typeof ManifestSchema>
 export type ManifestTool = z.infer<typeof ToolSchema>

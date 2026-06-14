@@ -142,74 +142,74 @@
       ],
       "responseMap": [
         {
-          "from": "properties.Name.id",
-          "to": "Name_id",
+          "from": "created_time",
+          "to": "created_time",
           "source": "main",
           "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
         },
         {
-          "from": "properties.Name.title[].annotations.bold",
-          "to": "bold",
+          "from": "last_edited_time",
+          "to": "last_edited_time",
           "source": "main",
           "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
         },
         {
-          "from": "properties.Name.title[].annotations.code",
-          "to": "code",
+          "from": "properties.Date.date.end",
+          "to": "end",
           "source": "main",
           "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
         },
         {
-          "from": "properties.Name.title[].annotations.italic",
-          "to": "italic",
+          "from": "properties.Date.date.start",
+          "to": "start",
           "source": "main",
           "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
         },
         {
-          "from": "properties.Name.title[].annotations.strikethrough",
-          "to": "strikethrough",
+          "from": "properties.Date.date.time_zone",
+          "to": "time_zone",
           "source": "main",
           "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
         },
         {
-          "from": "properties.Name.title[].annotations.underline",
-          "to": "underline",
-          "source": "main",
-          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
-        },
-        {
-          "from": "properties.Name.title[].href",
-          "to": "href",
-          "source": "main",
-          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
-        },
-        {
-          "from": "properties.Name.title[].plain_text",
-          "to": "plain_text",
-          "source": "main",
-          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
-        },
-        {
-          "from": "properties.Name.title[].text.content",
-          "to": "content",
-          "source": "main",
-          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
-        },
-        {
-          "from": "properties.Name.title[].text.link",
-          "to": "link",
-          "source": "main",
-          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
-        },
-        {
-          "from": "properties.Name.title[].type",
-          "to": "type",
+          "from": "properties.Date.id",
+          "to": "Date_id",
           "source": "main",
           "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
         },
         {
           "from": "properties.Status.id",
           "to": "Status_id",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "properties.Summary.id",
+          "to": "Summary_id",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "created_by.id",
+          "to": "created_by_id",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "id",
+          "to": "id",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "properties.Name.title[].plain_text",
+          "to": "title",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "properties.Name.title[].type",
+          "to": "type",
           "source": "main",
           "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
         },
@@ -221,19 +221,13 @@
         },
         {
           "from": "properties.Status.select.name",
-          "to": "select_name",
+          "to": "status",
           "source": "main",
           "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
         },
         {
-          "from": "properties.Summary.id",
-          "to": "Summary_id",
-          "source": "main",
-          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
-        },
-        {
-          "from": "properties.URL.id",
-          "to": "URL_id",
+          "from": "properties.Name.id",
+          "to": "Name_id",
           "source": "main",
           "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
         }

@@ -233,38 +233,44 @@
       ],
       "responseMap": [
         {
-          "from": "attendees[].displayName",
-          "to": "displayName",
+          "from": "end.dateTime",
+          "to": "end_dateTime",
           "source": "main",
           "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
         },
         {
-          "from": "attendees[].id",
-          "to": "attendees_id",
+          "from": "start.dateTime",
+          "to": "start_dateTime",
           "source": "main",
           "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
         },
         {
-          "from": "attendees[].responseStatus",
-          "to": "responseStatus",
+          "from": "description",
+          "to": "description",
           "source": "main",
           "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
         },
         {
-          "from": "conferenceData.conferenceId",
-          "to": "conferenceId",
+          "from": "location",
+          "to": "location",
           "source": "main",
           "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
         },
         {
-          "from": "conferenceData.conferenceSolution.key.type",
-          "to": "type",
+          "from": "status",
+          "to": "status",
           "source": "main",
           "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
         },
         {
-          "from": "conferenceData.conferenceSolution.name",
-          "to": "conferenceSolution_name",
+          "from": "summary",
+          "to": "summary",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "attendees[].email",
+          "to": "email",
           "source": "main",
           "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
         },
@@ -275,27 +281,8 @@
           "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
         },
         {
-          "from": "creator.id",
-          "to": "creator_id",
-          "source": "main",
-          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
-        },
-        {
-          "from": "description",
-          "to": "description",
-          "source": "main",
-          "transform": "firstLine",
-          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
-        },
-        {
-          "from": "extendedProperties.private.internalMeetingId",
-          "to": "internalMeetingId",
-          "source": "main",
-          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
-        },
-        {
-          "from": "iCalUID",
-          "to": "iCalUID",
+          "from": "end.timeZone",
+          "to": "end_timeZone",
           "source": "main",
           "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
         },
@@ -306,14 +293,26 @@
           "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
         },
         {
-          "from": "organizer.id",
-          "to": "organizer_id",
+          "from": "originalStartTime.dateTime",
+          "to": "dateTime",
           "source": "main",
           "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
         },
         {
-          "from": "recurringEventId",
-          "to": "recurringEventId",
+          "from": "source.title",
+          "to": "title",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "start.timeZone",
+          "to": "start_timeZone",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "updated",
+          "to": "updated",
           "source": "main",
           "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
         }

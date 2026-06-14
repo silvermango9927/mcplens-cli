@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import { ManifestSchema, ToolSchema } from '../src/manifest/schema.js'
+import { ManifestSchema, PartialAnalysisSchema, ToolSchema } from '../src/manifest/schema.js'
 
 const validTool = {
   name: 'get_issue',
@@ -60,5 +60,19 @@ describe('ManifestSchema', () => {
   })
   it('golden trackly manifest parses', () => {
     ManifestSchema.parse(JSON.parse(readFileSync('tests/fixtures/trackly.manifest.json', 'utf8')))
+  })
+  it('rejects duplicate tool names before codegen', () => {
+    expect(() => ManifestSchema.parse({
+      agentifyVersion: 1,
+      api: { name: 'Trackly', baseUrl: 'https://api.trackly.example', auth: { type: 'none' } },
+      tools: [validTool, { ...validTool }],
+      hiddenEndpoints: []
+    })).toThrow(/tool names must be unique/)
+  })
+  it('rejects duplicate tool names from LLM partial analysis', () => {
+    expect(() => PartialAnalysisSchema.parse({
+      tools: [validTool, { ...validTool }],
+      hiddenEndpoints: []
+    })).toThrow(/tool names must be unique/)
   })
 })

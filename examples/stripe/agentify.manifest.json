@@ -149,6 +149,18 @@
       ],
       "responseMap": [
         {
+          "from": "description",
+          "to": "description",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "email",
+          "to": "email",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
           "from": "address.state",
           "to": "state",
           "source": "main",
@@ -161,21 +173,8 @@
           "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
         },
         {
-          "from": "description",
-          "to": "description",
-          "source": "main",
-          "transform": "firstLine",
-          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
-        },
-        {
           "from": "id",
           "to": "id",
-          "source": "main",
-          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
-        },
-        {
-          "from": "invoice_settings.custom_fields[].name",
-          "to": "custom_fields_name",
           "source": "main",
           "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
         },
@@ -192,26 +191,50 @@
           "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
         },
         {
-          "from": "sources.url",
-          "to": "url",
+          "from": "balance",
+          "to": "balance",
           "source": "main",
           "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
         },
         {
-          "from": "tax_ids.data[].id",
-          "to": "data_id",
+          "from": "cash_balance",
+          "to": "cash_balance",
           "source": "main",
           "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
         },
         {
-          "from": "tax_ids.data[].verification.status",
-          "to": "status",
+          "from": "currency",
+          "to": "currency",
           "source": "main",
           "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
         },
         {
-          "from": "tax_ids.data[].verification.verified_name",
-          "to": "verified_name",
+          "from": "default_currency",
+          "to": "default_currency",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "default_source",
+          "to": "default_source",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "delinquent",
+          "to": "delinquent",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "discount",
+          "to": "discount",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "invoice_prefix",
+          "to": "invoice_prefix",
           "source": "main",
           "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
         }

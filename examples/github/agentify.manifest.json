@@ -114,34 +114,27 @@
       ],
       "responseMap": [
         {
-          "from": "assignee.events_url",
-          "to": "events_url",
+          "from": "body",
+          "to": "body",
           "source": "main",
           "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
         },
         {
-          "from": "assignee.followers_url",
-          "to": "followers_url",
+          "from": "state",
+          "to": "state",
           "source": "main",
           "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
         },
         {
-          "from": "assignee.following_url",
-          "to": "following_url",
+          "from": "state_reason",
+          "to": "state_reason",
           "source": "main",
           "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
         },
         {
-          "from": "assignee.gists_url",
-          "to": "gists_url",
+          "from": "title",
+          "to": "title",
           "source": "main",
-          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
-        },
-        {
-          "from": "assignee.html_url",
-          "to": "html_url",
-          "source": "main",
-          "transform": "stripHtml",
           "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
         },
         {
@@ -163,50 +156,32 @@
           "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
         },
         {
-          "from": "assignee.organizations_url",
-          "to": "organizations_url",
+          "from": "author_association",
+          "to": "author_association",
           "source": "main",
           "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
         },
         {
-          "from": "assignee.received_events_url",
-          "to": "received_events_url",
+          "from": "created_at",
+          "to": "created_at",
           "source": "main",
           "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
         },
         {
-          "from": "assignee.repos_url",
-          "to": "repos_url",
+          "from": "id",
+          "to": "id",
           "source": "main",
           "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
         },
         {
-          "from": "assignee.starred_url",
-          "to": "starred_url",
+          "from": "labels[].description",
+          "to": "description",
           "source": "main",
           "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
         },
         {
-          "from": "assignee.subscriptions_url",
-          "to": "subscriptions_url",
-          "source": "main",
-          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
-        },
-        {
-          "from": "assignee.url",
-          "to": "url",
-          "source": "main",
-          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
-        },
-        {
-          "from": "assignee.avatar_url",
-          "to": "avatar_url",
-          "source": "main",
-          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
-        },
-        {
-          "from": "assignee.gravatar_id",
-          "to": "gravatar_id",
+          "from": "number",
+          "to": "number",
           "source": "main",
           "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
         }

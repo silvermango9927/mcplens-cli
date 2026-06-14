@@ -37,6 +37,72 @@
       ],
       "responseMap": [
         {
+          "from": "user.real_name",
+          "to": "real_name",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "user.profile.status_emoji_display_info[].emoji_name",
+          "to": "emoji_name",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "user.profile.display_name",
+          "to": "display_name",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "user.profile.email",
+          "to": "email",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "user.profile.huddle_state",
+          "to": "huddle_state",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "user.profile.huddle_state_expiration_ts",
+          "to": "huddle_state_expiration_ts",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "user.profile.status_emoji",
+          "to": "status_emoji",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "user.profile.status_expiration",
+          "to": "status_expiration",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "user.profile.status_text",
+          "to": "status_text",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "user.profile.status_text_canonical",
+          "to": "status_text_canonical",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
+          "from": "user.profile.title",
+          "to": "title",
+          "source": "main",
+          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
+        },
+        {
           "from": "user.id",
           "to": "user_id",
           "source": "main",
@@ -57,66 +123,6 @@
         {
           "from": "user.name",
           "to": "user_name",
-          "source": "main",
-          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
-        },
-        {
-          "from": "user.profile.display_name",
-          "to": "display_name",
-          "source": "main",
-          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
-        },
-        {
-          "from": "user.profile.first_name",
-          "to": "first_name",
-          "source": "main",
-          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
-        },
-        {
-          "from": "user.profile.huddle_state",
-          "to": "huddle_state",
-          "source": "main",
-          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
-        },
-        {
-          "from": "user.profile.last_name",
-          "to": "last_name",
-          "source": "main",
-          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
-        },
-        {
-          "from": "user.profile.real_name",
-          "to": "real_name",
-          "source": "main",
-          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
-        },
-        {
-          "from": "user.profile.status_emoji_display_info[].display_url",
-          "to": "display_url",
-          "source": "main",
-          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
-        },
-        {
-          "from": "user.profile.status_emoji_display_info[].emoji_name",
-          "to": "emoji_name",
-          "source": "main",
-          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
-        },
-        {
-          "from": "user.profile.title",
-          "to": "title",
-          "source": "main",
-          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
-        },
-        {
-          "from": "user.team_id",
-          "to": "team_id",
-          "source": "main",
-          "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
-        },
-        {
-          "from": "user.updated",
-          "to": "updated",
           "source": "main",
           "reason": "Agent-relevant identifier, state, label, timestamp, URL, or concise content"
         }

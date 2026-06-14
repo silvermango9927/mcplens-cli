@@ -80,14 +80,14 @@
         "tool": "events_get",
         "endpoint": "GET /calendars/{calendarId}/events/{eventId}",
         "rawBytes": 3669,
-        "leanBytes": 673,
+        "leanBytes": 888,
         "estimatedRawTokens": 918,
-        "estimatedLeanTokens": 169
+        "estimatedLeanTokens": 222
       }
     ],
     "rawTokens": 918,
-    "leanTokens": 169,
-    "savedTokens": 749,
-    "savedPercent": 82
+    "leanTokens": 222,
+    "savedTokens": 696,
+    "savedPercent": 76
   }
 }

@@ -18,50 +18,54 @@ better on *field selection* (see [Caveats](#caveats)).
 
 | API | Endpoints | Tools | Hidden | Raw bytes | Lean bytes | Raw tokens | Lean tokens | **Saved** |
 |-----|----------:|------:|-------:|----------:|-----------:|-----------:|------------:|----------:|
-| **GitHub** (issue) | 11 | 7 | 4 | 7,784 | 846 | 1,946 | 212 | **89%** |
-| **Notion** (page) | 12 | 9 | 3 | 3,138 | 379 | 785 | 95 | **88%** |
-| **Slack** (users.info) | 11 | 7 | 4 | 2,517 | 408 | 630 | 102 | **84%** |
-| **Google Calendar** (event) | 10 | 10 | 0 | 3,669 | 673 | 918 | 169 | **82%** |
+| **GitHub** (issue) | 11 | 7 | 4 | 7,784 | 1,296 | 1,946 | 324 | **83%** |
+| **Notion** (page) | 12 | 9 | 3 | 3,138 | 457 | 785 | 115 | **85%** |
+| **Slack** (users.info) | 11 | 7 | 4 | 2,517 | 417 | 630 | 105 | **83%** |
+| **Google Calendar** (event) | 10 | 10 | 0 | 3,669 | 888 | 918 | 222 | **76%** |
 | **Stripe** (customer) | 12 | 8 | 4 | 1,945 | 394 | 487 | 99 | **80%** |
-| **Trackly** (issue, built-in) | 4 | 2 | 2 | 791 | 402 | 198 | 101 | 49% |
-| **Five public API fixtures** | **56** | **41** | **15** | 19,053 | 2,700 | 4,766 | 677 | **86%** |
-| **Total including Trackly** | **60** | **43** | **17** | 19,844 | 3,102 | 4,964 | 778 | **~84%** |
+| **Trackly** (issue, built-in) | 4 | 2 | 2 | 791 | 445 | 198 | 112 | 43% |
+| **Five public API fixtures** | **56** | **41** | **15** | 19,053 | 3,451 | 4,766 | 865 | **82%** |
+| **Total including Trackly** | **60** | **43** | **17** | 19,844 | 3,896 | 4,964 | 977 | **~80%** |
 
 **Two-line summary:**
 
-- **Token savings on public-API-shaped payloads: 80–89%** per response. Trackly is the
-  outlier at 49% because its sample is tiny, ~200 tokens, so there is less cruft to strip.
+- **Token savings on public-API-shaped payloads: 76–85%** per response. Trackly is the
+  outlier at 43% because its sample is tiny, ~200 tokens, so there is less cruft to strip.
 - **Tool surface shrinks 27% on the five public API fixtures**: 56 raw operations → 41
   tools, with **15 endpoints hidden** (avatars, webhooks, admin, oauth, file uploads,
   audit logs) so the agent never sees them.
 
 Why this matters: a coding/automation agent pays the response-token cost on **every single
-tool call**, and pays the tool-list cost on **every turn**. An 80%+ cut to response size
+tool call**, and pays the tool-list cost on **every turn**. An 80% cut to response size
 compounds across a conversation, and a leaner tool list reduces tool-selection errors.
+The example manifests also have semantic smoke tests that assert core fields like issue
+title/state/body, event start/end, page title/status, user email, and customer email survive
+the compression.
 
 ## Per-API detail
 
-### GitHub — `GET /issues/{issue_number}` → 89%
+### GitHub — `GET /issues/{issue_number}` → 83%
 A single GitHub issue is ~7.8 KB. Each embedded `user` object carries 18 fields (17 of them
 URLs: `followers_url`, `gists_url`, `received_events_url`, …), repeated for `assignee`,
 `assignees`, and the `milestone.creator`. Plus `reactions` URL block, `labels[].node_id`,
-`_url` fields on the issue itself. The lean response is **846 bytes**. Hidden: webhook
-creation, label-avatar, audit-log, admin restore.
+`_url` fields on the issue itself. The lean response is **1,296 bytes** and preserves the
+issue number, title, state, and full body instead of truncating the body to a heading.
+Hidden: webhook creation, label-avatar, audit-log, admin restore.
 
-### Notion — `GET /v1/pages/{page_id}` → 88%
+### Notion — `GET /v1/pages/{page_id}` → 85%
 Notion's property model is the most verbose tested: every rich-text run carries an
 `annotations` block (`bold`, `italic`, `strikethrough`, `underline`, `code`, `color`), plus
 `created_by`/`last_edited_by` user objects, `cover`, `icon`, and per-property type wrappers.
-3.1 KB → 379 bytes. Hidden: oauth token, file uploads, webhooks.
+3.1 KB → 457 bytes. Hidden: oauth token, file uploads, webhooks.
 
-### Slack — `GET /users.info` → 84%
+### Slack — `GET /users.info` → 83%
 The classic avatar-bloat case: the `profile` object ships **8 image sizes**
-(`image_24` … `image_1024`, `image_original`) plus `avatar_hash`. 2.5 KB → 408 bytes.
+(`image_24` … `image_1024`, `image_original`) plus `avatar_hash`. 2.5 KB → 417 bytes.
 Hidden: file upload, admin.users.list, oauth, users.setPhoto.
 
-### Google Calendar — `GET /events/{eventId}` → 82%
+### Google Calendar — `GET /events/{eventId}` → 76%
 `conferenceData` (entry points, signature, icon URIs), per-attendee status objects,
-`reminders.overrides`, `extendedProperties`, and a dozen `guestsCan*` flags. 3.7 KB → 673
+`reminders.overrides`, `extendedProperties`, and a dozen `guestsCan*` flags. 3.7 KB → 888
 bytes. **Note: 0 endpoints hidden** — see caveat below.
 
 ### Stripe — `GET /v1/customers/{customer}` → 80%
@@ -69,27 +73,26 @@ Nested deprecated list objects (`sources`, `subscriptions`, `tax_ids` each with
 `object`/`data`/`has_more`/`total_count`/`url`), `invoice_settings`, and many null internal
 fields. 1.9 KB → 394 bytes. Hidden: webhook endpoints, oauth, admin account close.
 
-### Trackly — built-in fixture → 49%
+### Trackly — built-in fixture → 43%
 The repo's existing 4-endpoint fixture. Its sample is small (~200 tokens), so the absolute
 win is modest; included as the baseline. Note the *hand-curated* manifest in
 `tests/fixtures/trackly.manifest.json` reaches **72%** on the same sample — the gap between
-49% and 72% is the gap between the offline heuristic and good curation.
+43% and 72% is the gap between the offline heuristic and good curation.
 
 ## Caveats
 
 These numbers are honest, but read them with two qualifications:
 
-1. **Offline field *selection* is crude.** The heuristic reliably cuts token *volume*
-   (80–89%), but it doesn't always keep the *right* fields. The starkest case is GitHub: the
-   offline run kept 16 `assignee.*_url` fields and **dropped `title`, `state`, and `body`** —
-   because the field ranker scores every `*_url` as relevant and breaks ties alphabetically,
-   so `assignee.*` paths crowd out the genuinely useful top-level fields. The token count
-   still drops 89%, but the surviving payload is the wrong 11%. The **LLM curation path**
-   (set `ANTHROPIC_API_KEY`) is designed to pick semantically correct fields; the
-   hand-curated Trackly manifest (`id`, `key`, `summary`, `status`, `description`,
-   `assignee_name`, `updated`) demonstrates what good selection looks like. **Treat the
-   token percentages as a compression *ceiling*, and the LLM/curated manifest as the path to
-   a lean payload that's also *correct*.**
+1. **Offline field *selection* is still heuristic.** The heuristic now favors top-level
+   semantic fields over nested metadata URLs and the tests assert the public examples keep
+   their core agent-useful fields. It is still not a replacement for human or LLM curation:
+   it may keep a useful-but-not-ideal field, miss domain-specific meaning, or leave arrays
+   in a mechanically correct but less polished shape. The **LLM curation path** (set
+   `ANTHROPIC_API_KEY`) is designed to pick semantically correct fields; the hand-curated
+   Trackly manifest (`id`, `key`, `summary`, `status`, `description`, `assignee_name`,
+   `updated`) demonstrates what good selection looks like. **Treat the token percentages as
+   a compression baseline, and the LLM/curated manifest as the path to a lean payload that's
+   also best-fit for agents.**
 
 2. **Offline hiding is keyword-based.** Endpoints are hidden only when their path/summary
    matches known patterns (`avatar`, `webhook`, `admin`, `oauth`, `audit`, `upload`, …).

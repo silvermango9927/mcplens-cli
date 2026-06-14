@@ -29,7 +29,7 @@
       "endpoints": [
         "GET /v1/customers/{customer}"
       ],
-      "responseFieldCount": 11
+      "responseFieldCount": 15
     },
     {
       "name": "customers_sources_list",
@@ -66,7 +66,7 @@
         "tool": "customers_get",
         "endpoint": "GET /v1/customers/{customer}",
         "rawBytes": 1945,
-        "leanBytes": 394,
+        "leanBytes": 393,
         "estimatedRawTokens": 487,
         "estimatedLeanTokens": 99
       }
