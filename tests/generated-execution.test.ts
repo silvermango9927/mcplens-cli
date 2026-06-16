@@ -1,4 +1,4 @@
-import { spawn } from 'node:child_process'
+import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process'
 import { createServer, type Server } from 'node:http'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
@@ -149,6 +149,67 @@ describe('generated MCP server execution', () => {
       await rm(dir, { recursive: true, force: true })
     }
   }, 120_000)
+
+  it('protects Streamable HTTP with bearer auth and exposes health probes', async () => {
+    const dir = await mkdtemp(path.join(tmpdir(), 'agentify-generated-http-'))
+    let httpServer: GeneratedHttpServer | undefined
+
+    try {
+      const manifest = ManifestSchema.parse(await readJsonFile('tests/fixtures/trackly.manifest.json'))
+      await generateProject(manifest, dir)
+      await run('npm', ['install', '--silent'], dir)
+      await run('npm', ['run', 'build'], dir)
+
+      await expect(runGeneratedHttpWithoutToken(dir)).resolves.toContain('missing required env var MCP_HTTP_TOKEN')
+
+      httpServer = await startGeneratedHttpServer(dir, {
+        MCP_HTTP_TOKEN: 'test-http-token',
+        TRACKLY_API_TOKEN: 'test-token'
+      })
+
+      await expect(fetchJson(`${httpServer.baseUrl}/healthz`)).resolves.toMatchObject({
+        status: 200,
+        body: { ok: true }
+      })
+      await expect(fetchJson(`${httpServer.baseUrl}/readyz`)).resolves.toMatchObject({
+        status: 200,
+        body: { ok: true }
+      })
+
+      const initializeRequest = {
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'initialize',
+        params: {
+          protocolVersion: '2024-11-05',
+          capabilities: {},
+          clientInfo: { name: 'agentify-http-test', version: '0.1.0' }
+        }
+      }
+
+      await expect(postMcpInitialize(httpServer.baseUrl, initializeRequest)).resolves.toMatchObject({
+        status: 401,
+        body: { error: { message: 'Unauthorized' }, id: 1 }
+      })
+      await expect(postMcpInitialize(httpServer.baseUrl, initializeRequest, 'wrong-token')).resolves.toMatchObject({
+        status: 401,
+        body: { error: { message: 'Unauthorized' }, id: 1 }
+      })
+
+      const authorized = await postMcpInitialize(httpServer.baseUrl, initializeRequest, 'test-http-token')
+      expect(authorized.status).toBe(200)
+      expect(authorized.body).toMatchObject({
+        jsonrpc: '2.0',
+        id: 1,
+        result: {
+          serverInfo: { name: 'Trackly MCP', version: '0.1.0' }
+        }
+      })
+    } finally {
+      await stopGeneratedHttpServer(httpServer)
+      await rm(dir, { recursive: true, force: true })
+    }
+  }, 120_000)
 })
 
 function startMockTrackly(responseBody: unknown): Promise<Server> {
@@ -233,9 +294,118 @@ function runForExit(
   })
 }
 
+type GeneratedHttpServer = {
+  baseUrl: string
+  child: ChildProcessWithoutNullStreams
+  output: () => string
+}
+
+async function startGeneratedHttpServer(dir: string, env: Record<string, string>): Promise<GeneratedHttpServer> {
+  const port = await getFreePort()
+  const child = spawn(process.execPath, [path.join(dir, 'dist/index.js')], {
+    cwd: dir,
+    stdio: ['ignore', 'pipe', 'pipe'],
+    env: generatedEnv({
+      ...env,
+      MCP_TRANSPORT: 'http',
+      PORT: String(port)
+    })
+  })
+  let output = ''
+  child.stdout.on('data', (chunk) => {
+    output += chunk.toString()
+  })
+  child.stderr.on('data', (chunk) => {
+    output += chunk.toString()
+  })
+  const server = { baseUrl: `http://127.0.0.1:${port}`, child, output: () => output }
+  await waitForHttpServer(server)
+  return server
+}
+
+async function runGeneratedHttpWithoutToken(dir: string): Promise<string> {
+  const port = await getFreePort()
+  return runForExit(process.execPath, [path.join(dir, 'dist/index.js')], dir, generatedEnv({
+    MCP_TRANSPORT: 'http',
+    PORT: String(port),
+    TRACKLY_API_TOKEN: 'test-token'
+  })).then((result) => {
+    if (result.code === 0) throw new Error(`Generated HTTP server exited successfully without MCP_HTTP_TOKEN\n${result.output}`)
+    return result.output
+  })
+}
+
+async function waitForHttpServer(server: GeneratedHttpServer): Promise<void> {
+  const deadline = Date.now() + 10_000
+  while (Date.now() < deadline) {
+    if (server.child.exitCode !== null) throw new Error(`Generated HTTP server exited early\n${server.output()}`)
+    try {
+      const response = await fetch(`${server.baseUrl}/healthz`)
+      if (response.ok) return
+    } catch {
+      // Server is still starting.
+    }
+    await delay(50)
+  }
+  throw new Error(`Timed out waiting for generated HTTP server\n${server.output()}`)
+}
+
+async function stopGeneratedHttpServer(server: GeneratedHttpServer | undefined): Promise<void> {
+  if (!server) return
+  if (server.child.exitCode !== null) return
+  server.child.kill()
+  await new Promise<void>((resolve) => server.child.once('close', () => resolve()))
+}
+
+function fetchJson(url: string): Promise<{ status: number; body: unknown }> {
+  return fetch(url).then(async (response) => ({
+    status: response.status,
+    body: await response.json()
+  }))
+}
+
+async function postMcpInitialize(
+  baseUrl: string,
+  body: unknown,
+  token?: string
+): Promise<{ status: number; body: unknown }> {
+  const response = await fetch(`${baseUrl}/mcp`, {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json, text/event-stream',
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {})
+    },
+    body: JSON.stringify(body)
+  })
+  return {
+    status: response.status,
+    body: await response.json()
+  }
+}
+
+function getFreePort(): Promise<number> {
+  const server = createServer()
+  return new Promise((resolve, reject) => {
+    server.on('error', reject)
+    server.listen(0, '127.0.0.1', () => {
+      const address = server.address()
+      if (!address || typeof address === 'string') {
+        server.close(() => reject(new Error('Could not allocate a test port')))
+        return
+      }
+      server.close(() => resolve(address.port))
+    })
+  })
+}
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
 function generatedEnv(overrides: Record<string, string>): Record<string, string> {
   const env = stringEnv(process.env)
-  for (const key of ['MCP_TRANSPORT', 'HOST', 'PORT', 'AGENTIFY_BASE_URL', 'TRACKLY_API_TOKEN']) {
+  for (const key of ['MCP_TRANSPORT', 'HOST', 'PORT', 'MCP_HTTP_TOKEN', 'AGENTIFY_BASE_URL', 'TRACKLY_API_TOKEN']) {
     delete env[key]
   }
   return { ...env, ...overrides }
