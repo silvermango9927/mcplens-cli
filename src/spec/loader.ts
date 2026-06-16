@@ -81,6 +81,7 @@ function collectEndpoints(doc: Record<string, any>): LoadedEndpoint[] {
       if (!METHODS.has(methodRaw)) continue
       const method = methodRaw.toUpperCase() as HttpMethod
       const opParams = [...pathParams, ...readParams(operation?.parameters)]
+      const bodyParams = readRequestBodyParams(operation?.requestBody)
       endpoints.push({
         method,
         path: route,
@@ -89,7 +90,7 @@ function collectEndpoints(doc: Record<string, any>): LoadedEndpoint[] {
         description: operation?.description,
         deprecated: Boolean(operation?.deprecated),
         tags: Array.isArray(operation?.tags) ? operation.tags.map(String) : [],
-        params: dedupeParams([...pathTemplateParams(route), ...opParams])
+        params: dedupeParams([...opParams, ...pathTemplateParams(route), ...bodyParams])
       })
     }
   }
@@ -107,6 +108,25 @@ function readParams(params: unknown): ToolParam[] {
       required: p.in === 'path' ? true : Boolean(p.required),
       description: String(p.description ?? '')
     }))
+}
+
+function readRequestBodyParams(requestBody: unknown): ToolParam[] {
+  const schema = (requestBody as any)?.content?.['application/json']?.schema
+  if (!schema || schema.type !== 'object' || !schema.properties || typeof schema.properties !== 'object') return []
+
+  const required = new Set(Array.isArray(schema.required) ? schema.required.map(String) : [])
+  return Object.entries<any>(schema.properties)
+    .flatMap<ToolParam>(([name, property]) => {
+      const type = bodySchemaType(property)
+      if (!type) return []
+      return [{
+        name,
+        in: 'body' as const,
+        type,
+        required: required.has(name),
+        description: String(property?.description ?? '')
+      }]
+    })
 }
 
 function pathTemplateParams(route: string): ToolParam[] {
@@ -136,4 +156,12 @@ function schemaType(schema: any): ToolParam['type'] {
   if (schema?.type === 'number' || schema?.type === 'integer') return 'number'
   if (schema?.type === 'boolean') return 'boolean'
   return 'string'
+}
+
+function bodySchemaType(schema: any): ToolParam['type'] | undefined {
+  if (schema?.type === 'array') return schema.items?.type === 'string' ? 'string[]' : undefined
+  if (schema?.type === 'string') return 'string'
+  if (schema?.type === 'number' || schema?.type === 'integer') return 'number'
+  if (schema?.type === 'boolean') return 'boolean'
+  return undefined
 }

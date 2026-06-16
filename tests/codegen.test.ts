@@ -19,4 +19,39 @@ describe('generateProject', () => {
       await rm(dir, { recursive: true, force: true })
     }
   })
+
+  it('includes JSON body params in generated tool schemas and request metadata', async () => {
+    const dir = await mkdtemp(path.join(tmpdir(), 'agentify-codegen-body-'))
+    try {
+      const manifest = ManifestSchema.parse({
+        agentifyVersion: 1,
+        api: { name: 'GitHub Lite', baseUrl: 'https://api.github.example', auth: { type: 'none' } },
+        tools: [
+          {
+            name: 'create_issue',
+            description: 'Create an issue',
+            params: [
+              { name: 'owner', in: 'path', type: 'string', required: true, description: 'Repository owner' },
+              { name: 'repo', in: 'path', type: 'string', required: true, description: 'Repository name' },
+              { name: 'title', in: 'body', type: 'string', required: true, description: 'Issue title' },
+              { name: 'body', in: 'body', type: 'string', required: false, description: 'Issue body' },
+              { name: 'labels', in: 'body', type: 'string[]', required: false, description: 'Issue labels' }
+            ],
+            requests: [{ key: 'main', method: 'POST', path: '/repos/{owner}/{repo}/issues' }],
+            responseMap: [{ from: 'number', to: 'number', reason: 'Issue number' }]
+          }
+        ],
+        hiddenEndpoints: []
+      })
+      await generateProject(manifest, dir)
+
+      const source = await readFile(path.join(dir, 'src/tools/create_issue.ts'), 'utf8')
+      expect(source).toContain('"in": "body"')
+      expect(source).toContain('"title": z.string().describe("Issue title")')
+      expect(source).toContain('"body": z.string().describe("Issue body").optional()')
+      expect(source).toContain('"labels": z.array(z.string()).describe("Issue labels").optional()')
+    } finally {
+      await rm(dir, { recursive: true, force: true })
+    }
+  })
 })

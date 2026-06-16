@@ -56,6 +56,80 @@ describe('generated MCP server execution', () => {
       await rm(dir, { recursive: true, force: true })
     }
   }, 120_000)
+
+  it('sends generated body params as a JSON request body', async () => {
+    const dir = await mkdtemp(path.join(tmpdir(), 'agentify-generated-body-exec-'))
+    let mockServer: Server | undefined
+    const observedRequest: { contentType?: string | string[]; body?: unknown } = {}
+    const client = new Client({ name: 'agentify-test-client', version: '0.1.0' })
+
+    try {
+      const manifest = ManifestSchema.parse({
+        agentifyVersion: 1,
+        api: { name: 'GitHub Lite', baseUrl: 'https://api.github.example', auth: { type: 'none' } },
+        tools: [
+          {
+            name: 'create_issue',
+            description: 'Create an issue',
+            params: [
+              { name: 'owner', in: 'path', type: 'string', required: true, description: 'Repository owner' },
+              { name: 'repo', in: 'path', type: 'string', required: true, description: 'Repository name' },
+              { name: 'title', in: 'body', type: 'string', required: true, description: 'Issue title' },
+              { name: 'body', in: 'body', type: 'string', required: false, description: 'Issue body' },
+              { name: 'labels', in: 'body', type: 'string[]', required: false, description: 'Issue labels' }
+            ],
+            requests: [{ key: 'main', method: 'POST', path: '/repos/{owner}/{repo}/issues' }],
+            responseMap: [
+              { from: 'number', to: 'number', reason: 'Issue number' },
+              { from: 'title', to: 'title', reason: 'Issue title' }
+            ]
+          }
+        ],
+        hiddenEndpoints: []
+      })
+      await generateProject(manifest, dir)
+      await run('npm', ['install', '--silent'], dir)
+      await run('npm', ['run', 'build'], dir)
+
+      mockServer = await startMockGitHubLite(observedRequest)
+      const address = mockServer.address()
+      if (!address || typeof address === 'string') throw new Error('Mock server did not bind to a port')
+
+      const transport = new StdioClientTransport({
+        command: process.execPath,
+        args: [path.join(dir, 'dist/index.js')],
+        cwd: dir,
+        stderr: 'pipe',
+        env: {
+          ...stringEnv(process.env),
+          AGENTIFY_BASE_URL: `http://127.0.0.1:${address.port}`
+        }
+      })
+      await client.connect(transport)
+
+      const result = await client.callTool({
+        name: 'create_issue',
+        arguments: {
+          owner: 'octo-org',
+          repo: 'hello-world',
+          title: 'Bug report',
+          body: 'Steps to reproduce',
+          labels: ['bug', 'triage']
+        }
+      })
+      expect(result.structuredContent).toEqual({ number: 42, title: 'Bug report' })
+      expect(observedRequest.contentType).toContain('application/json')
+      expect(observedRequest.body).toEqual({
+        title: 'Bug report',
+        body: 'Steps to reproduce',
+        labels: ['bug', 'triage']
+      })
+    } finally {
+      await client.close().catch(() => undefined)
+      await new Promise<void>((resolve) => mockServer?.close(() => resolve()) ?? resolve())
+      await rm(dir, { recursive: true, force: true })
+    }
+  }, 120_000)
 })
 
 function startMockTrackly(responseBody: unknown): Promise<Server> {
@@ -65,6 +139,32 @@ function startMockTrackly(responseBody: unknown): Promise<Server> {
       expect(req.headers.authorization).toBe('Bearer test-token')
       res.setHeader('content-type', 'application/json')
       res.end(JSON.stringify(responseBody))
+      return
+    }
+    res.statusCode = 404
+    res.end(JSON.stringify({ error: 'not found' }))
+  })
+  return new Promise((resolve, reject) => {
+    server.on('error', reject)
+    server.listen(0, '127.0.0.1', () => resolve(server))
+  })
+}
+
+function startMockGitHubLite(observedRequest: { contentType?: string | string[]; body?: unknown }): Promise<Server> {
+  const server = createServer((req, res) => {
+    const url = new URL(req.url ?? '/', 'http://127.0.0.1')
+    if (req.method === 'POST' && url.pathname === '/repos/octo-org/hello-world/issues') {
+      observedRequest.contentType = req.headers['content-type']
+      let raw = ''
+      req.on('data', (chunk) => {
+        raw += chunk.toString()
+      })
+      req.on('end', () => {
+        observedRequest.body = JSON.parse(raw)
+        res.statusCode = 201
+        res.setHeader('content-type', 'application/json')
+        res.end(JSON.stringify({ number: 42, title: 'Bug report', state: 'open' }))
+      })
       return
     }
     res.statusCode = 404
