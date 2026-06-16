@@ -11,6 +11,8 @@ TypeScript transforms. The generated MCP server makes no LLM calls at runtime.
 
 Requires Node.js 20 or newer.
 
+From a repo checkout:
+
 ```sh
 npm install
 npm run build
@@ -40,6 +42,30 @@ npm run cli -- build --manifest agentify.manifest.json --out ./trackly-mcp
 
 The build command writes the project, runs `npm install`, runs `tsc`, and smoke-tests
 MCP `tools/list` over stdio. Use `--no-verify` to only emit files.
+
+## Install From A Tarball
+
+Until `agentify` is published to npm, you can install the package produced by this repo:
+
+```sh
+npm run build
+npm pack
+npm install -g ./agentify-*.tgz
+agentify --help
+```
+
+After global install, use the CLI without `npm run cli --`. Point it at your own
+OpenAPI spec and optional recorded samples:
+
+```sh
+agentify compile \
+  --spec ./openapi.json \
+  --samples ./samples \
+  --impact-report impact-report.json \
+  --out agentify.manifest.json
+
+agentify build --manifest agentify.manifest.json --out ./trackly-mcp
+```
 
 ## Package Smoke Test
 
@@ -79,16 +105,47 @@ match generated tools.
 
 ## Generated Server
 
-Generated projects default to stdio:
+Generated projects are standalone TypeScript MCP servers. Each generated project includes:
+
+- `README.md` with setup, stdio, HTTP, Docker Compose, and client connection notes.
+- `.env.example` listing transport, HTTP token, upstream base URL, and inferred auth env vars.
+- `Dockerfile` and `docker-compose.yml` for self-hosting.
+- `src/lib/config.ts` runtime validation that fails fast when required env vars are missing.
+
+Generated projects default to stdio, which is the safest mode for local MCP clients:
 
 ```sh
+cd ./trackly-mcp
+npm install
+npm run build
 npm start
 ```
 
-They also include Streamable HTTP support:
+They also include Streamable HTTP support for self-hosting:
 
 ```sh
-MCP_TRANSPORT=http PORT=3000 npm start
+export MCP_TRANSPORT=http
+export HOST=127.0.0.1
+export PORT=3000
+export MCP_HTTP_TOKEN=replace-with-a-long-random-token
+npm start
 ```
 
-Set upstream credentials using the env vars inferred into `agentify.manifest.json`.
+HTTP mode serves MCP at `/mcp` and requires:
+
+```http
+Authorization: Bearer $MCP_HTTP_TOKEN
+```
+
+It also exposes `/healthz` and `/readyz` for health checks. Do not expose `/mcp` to the
+public internet without a strong token, TLS, and a reverse proxy or firewall that you
+control.
+
+For Docker Compose:
+
+```sh
+cd ./trackly-mcp
+cp .env.example .env
+# edit .env and replace MCP_HTTP_TOKEN plus any upstream credentials
+docker compose up --build
+```
