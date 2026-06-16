@@ -68,6 +68,7 @@ export type RuntimeConfig = {
   transport: McpTransport
   host: string
   port: number
+  mcpHttpToken?: string
   agentifyBaseUrl: string
   upstreamAuth: UpstreamAuth
 }
@@ -87,6 +88,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): RuntimeConfig 
   const transport = parseTransport(env.MCP_TRANSPORT, errors)
   const host = parseHost(env.HOST)
   const port = parsePort(env.PORT, errors)
+  const mcpHttpToken = loadHttpToken(env, transport, errors)
   const agentifyBaseUrl = parseUrl(env.AGENTIFY_BASE_URL ?? DEFAULT_BASE_URL, 'AGENTIFY_BASE_URL', errors)
   const upstreamAuth = loadUpstreamAuth(env, errors)
 
@@ -94,7 +96,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): RuntimeConfig 
     throw new Error(\`Invalid runtime configuration: \${errors.join('; ')}\`)
   }
 
-  return { transport, host, port, agentifyBaseUrl, upstreamAuth }
+  return { transport, host, port, mcpHttpToken, agentifyBaseUrl, upstreamAuth }
 }
 
 function parseTransport(value: string | undefined, errors: string[]): McpTransport {
@@ -116,6 +118,11 @@ function parsePort(value: string | undefined, errors: string[]): number {
     return 3000
   }
   return port
+}
+
+function loadHttpToken(env: NodeJS.ProcessEnv, transport: McpTransport, errors: string[]): string | undefined {
+  if (transport !== 'http') return undefined
+  return requireEnv(env, 'MCP_HTTP_TOKEN', errors)
 }
 
 function parseUrl(value: string, envVar: string, errors: string[]): string {
@@ -220,7 +227,7 @@ export function indexTemplate(manifest: Manifest): string {
     .map((tool) => `import { ${registerFunctionName(tool.name)} } from './tools/${tool.name}.js'`)
     .join('\n')
   const registrations = manifest.tools.map((tool) => `${registerFunctionName(tool.name)}(server)`).join('\n  ')
-  return `import { randomUUID } from 'node:crypto'
+  return `import { randomUUID, timingSafeEqual } from 'node:crypto'
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js'
@@ -241,8 +248,22 @@ async function startStdio(): Promise<void> {
 }
 
 async function startHttp(config: RuntimeConfig): Promise<void> {
+  if (!config.mcpHttpToken) throw new Error('MCP_HTTP_TOKEN is required when MCP_TRANSPORT=http')
   const app = createMcpExpressApp()
   const transports: Record<string, StreamableHTTPServerTransport> = {}
+  app.get('/healthz', (_req: any, res: any) => res.status(200).json({ ok: true }))
+  app.get('/readyz', (_req: any, res: any) => res.status(200).json({ ok: true }))
+  app.use('/mcp', (req: any, res: any, next: any) => {
+    if (hasValidBearerAuth(req, config.mcpHttpToken!)) {
+      next()
+      return
+    }
+    res
+      .status(401)
+      .set('WWW-Authenticate', 'Bearer')
+      .json({ jsonrpc: '2.0', error: { code: -32001, message: 'Unauthorized' }, id: requestId(req) })
+  })
+
   app.post('/mcp', async (req: any, res: any) => {
     try {
       const sessionId = req.headers['mcp-session-id'] as string | undefined
@@ -276,6 +297,26 @@ async function startHttp(config: RuntimeConfig): Promise<void> {
     const displayHost = config.host === '0.0.0.0' ? 'localhost' : config.host
     console.error(\`MCP Streamable HTTP listening on http://\${displayHost}:\${config.port}/mcp\`)
   })
+}
+
+function hasValidBearerAuth(req: any, token: string): boolean {
+  const authorization = req.headers.authorization
+  if (typeof authorization !== 'string') return false
+  const prefix = 'Bearer '
+  if (authorization.slice(0, prefix.length).toLowerCase() !== prefix.toLowerCase()) return false
+  const supplied = authorization.slice(prefix.length)
+  return constantTimeEqual(supplied, token)
+}
+
+function constantTimeEqual(left: string, right: string): boolean {
+  const leftBuffer = Buffer.from(left)
+  const rightBuffer = Buffer.from(right)
+  if (leftBuffer.length !== rightBuffer.length) return false
+  return timingSafeEqual(leftBuffer, rightBuffer)
+}
+
+function requestId(req: any): unknown {
+  return req.body && typeof req.body === 'object' && 'id' in req.body ? req.body.id : null
 }
 
 try {
