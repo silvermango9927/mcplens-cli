@@ -49,9 +49,114 @@ export function tsconfigTemplate(): string {
   )
 }
 
-export function upstreamTemplate(manifest: Manifest): string {
-  return `const BASE_URL = process.env.AGENTIFY_BASE_URL ?? ${JSON.stringify(manifest.api.baseUrl)}
-const AUTH = ${JSON.stringify(manifest.api.auth, null, 2)} as const
+export function configTemplate(manifest: Manifest): string {
+  return `type McpTransport = 'stdio' | 'http'
+
+type AuthConfig =
+  | { type: 'bearer'; envVar: string }
+  | { type: 'header'; header: string; envVar: string }
+  | { type: 'basic'; userEnvVar: string; passEnvVar: string }
+  | { type: 'none' }
+
+export type UpstreamAuth =
+  | { type: 'bearer'; envVar: string; token: string }
+  | { type: 'header'; header: string; envVar: string; value: string }
+  | { type: 'basic'; userEnvVar: string; passEnvVar: string; user: string; pass: string }
+  | { type: 'none' }
+
+export type RuntimeConfig = {
+  transport: McpTransport
+  host: string
+  port: number
+  agentifyBaseUrl: string
+  upstreamAuth: UpstreamAuth
+}
+
+const DEFAULT_BASE_URL = ${JSON.stringify(manifest.api.baseUrl)}
+const AUTH: AuthConfig = ${JSON.stringify(manifest.api.auth, null, 2)}
+
+let cachedConfig: RuntimeConfig | undefined
+
+export function getConfig(): RuntimeConfig {
+  cachedConfig ??= loadConfig()
+  return cachedConfig
+}
+
+export function loadConfig(env: NodeJS.ProcessEnv = process.env): RuntimeConfig {
+  const errors: string[] = []
+  const transport = parseTransport(env.MCP_TRANSPORT, errors)
+  const host = parseHost(env.HOST)
+  const port = parsePort(env.PORT, errors)
+  const agentifyBaseUrl = parseUrl(env.AGENTIFY_BASE_URL ?? DEFAULT_BASE_URL, 'AGENTIFY_BASE_URL', errors)
+  const upstreamAuth = loadUpstreamAuth(env, errors)
+
+  if (errors.length > 0) {
+    throw new Error(\`Invalid runtime configuration: \${errors.join('; ')}\`)
+  }
+
+  return { transport, host, port, agentifyBaseUrl, upstreamAuth }
+}
+
+function parseTransport(value: string | undefined, errors: string[]): McpTransport {
+  if (value == null || value === '') return 'stdio'
+  if (value === 'stdio' || value === 'http') return value
+  errors.push('MCP_TRANSPORT must be "stdio" or "http"')
+  return 'stdio'
+}
+
+function parseHost(value: string | undefined): string {
+  return value && value.trim() ? value.trim() : '127.0.0.1'
+}
+
+function parsePort(value: string | undefined, errors: string[]): number {
+  if (value == null || value === '') return 3000
+  const port = Number(value)
+  if (!Number.isInteger(port) || port < 1 || port > 65535) {
+    errors.push('PORT must be an integer from 1 to 65535')
+    return 3000
+  }
+  return port
+}
+
+function parseUrl(value: string, envVar: string, errors: string[]): string {
+  try {
+    return new URL(value).toString()
+  } catch {
+    errors.push(\`\${envVar} must be a valid URL\`)
+    return DEFAULT_BASE_URL
+  }
+}
+
+function loadUpstreamAuth(env: NodeJS.ProcessEnv, errors: string[]): UpstreamAuth {
+  if (AUTH.type === 'bearer') {
+    return { type: 'bearer', envVar: AUTH.envVar, token: requireEnv(env, AUTH.envVar, errors) }
+  }
+  if (AUTH.type === 'header') {
+    return { type: 'header', header: AUTH.header, envVar: AUTH.envVar, value: requireEnv(env, AUTH.envVar, errors) }
+  }
+  if (AUTH.type === 'basic') {
+    return {
+      type: 'basic',
+      userEnvVar: AUTH.userEnvVar,
+      passEnvVar: AUTH.passEnvVar,
+      user: requireEnv(env, AUTH.userEnvVar, errors),
+      pass: requireEnv(env, AUTH.passEnvVar, errors)
+    }
+  }
+  return { type: 'none' }
+}
+
+function requireEnv(env: NodeJS.ProcessEnv, name: string, errors: string[]): string {
+  const value = env[name]
+  if (value && value.trim()) return value
+  errors.push(\`missing required env var \${name}\`)
+  return ''
+}
+`
+}
+
+export function upstreamTemplate(_manifest: Manifest): string {
+  return `import { getConfig, type RuntimeConfig } from './config.js'
 
 type ParamDef = { name: string; in: 'path' | 'query' | 'body'; type: string; required?: boolean; description?: string }
 
@@ -61,8 +166,9 @@ export async function requestJson(
   args: Record<string, unknown>,
   params: readonly ParamDef[]
 ): Promise<unknown> {
+  const config = getConfig()
   const path = pathTemplate.replace(/\\{([^}]+)\\}/g, (_, name: string) => encodeURIComponent(stringArg(args, name)))
-  const url = new URL(path, BASE_URL.endsWith('/') ? BASE_URL : \`\${BASE_URL}/\`)
+  const url = new URL(path, config.agentifyBaseUrl.endsWith('/') ? config.agentifyBaseUrl : \`\${config.agentifyBaseUrl}/\`)
   const body: Record<string, unknown> = {}
 
   for (const param of params) {
@@ -75,7 +181,7 @@ export async function requestJson(
     if (param.in === 'body') body[param.name] = value
   }
 
-  const headers: Record<string, string> = { Accept: 'application/json', ...authHeaders() }
+  const headers: Record<string, string> = { Accept: 'application/json', ...authHeaders(config) }
   const hasBody = Object.keys(body).length > 0
   if (hasBody) headers['Content-Type'] = 'application/json'
   const response = await fetch(url, { method, headers, body: hasBody ? JSON.stringify(body) : undefined })
@@ -94,27 +200,19 @@ function stringArg(args: Record<string, unknown>, name: string): string {
   return String(value)
 }
 
-function authHeaders(): Record<string, string> {
-${authHeaderSource(manifest.api.auth)}
+function authHeaders(config: RuntimeConfig): Record<string, string> {
+  if (config.upstreamAuth.type === 'bearer') {
+    return { Authorization: \`Bearer \${config.upstreamAuth.token}\` }
+  }
+  if (config.upstreamAuth.type === 'header') {
+    return { [config.upstreamAuth.header]: config.upstreamAuth.value }
+  }
+  if (config.upstreamAuth.type === 'basic') {
+    return { Authorization: \`Basic \${Buffer.from(\`\${config.upstreamAuth.user}:\${config.upstreamAuth.pass}\`).toString('base64')}\` }
+  }
+  return {}
 }
 `
-}
-
-function authHeaderSource(auth: ManifestAuth): string {
-  if (auth.type === 'bearer') {
-    return `  const token = process.env[${JSON.stringify(auth.envVar)}]
-  return token ? { Authorization: \`Bearer \${token}\` } : {}`
-  }
-  if (auth.type === 'header') {
-    return `  const token = process.env[${JSON.stringify(auth.envVar)}]
-  return token ? { [${JSON.stringify(auth.header)}]: token } : {}`
-  }
-  if (auth.type === 'basic') {
-    return `  const user = process.env[${JSON.stringify(auth.userEnvVar)}]
-  const pass = process.env[${JSON.stringify(auth.passEnvVar)}]
-  return user && pass ? { Authorization: \`Basic \${Buffer.from(\`\${user}:\${pass}\`).toString('base64')}\` } : {}`
-  }
-  return '  return {}'
 }
 
 export function indexTemplate(manifest: Manifest): string {
@@ -128,6 +226,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js'
 import { createMcpExpressApp } from '@modelcontextprotocol/sdk/server/express.js'
 import { isInitializeRequest } from '@modelcontextprotocol/sdk/types.js'
+import { getConfig, type RuntimeConfig } from './lib/config.js'
 ${imports}
 
 function createServer(): McpServer {
@@ -141,7 +240,7 @@ async function startStdio(): Promise<void> {
   await server.connect(new StdioServerTransport())
 }
 
-async function startHttp(): Promise<void> {
+async function startHttp(config: RuntimeConfig): Promise<void> {
   const app = createMcpExpressApp()
   const transports: Record<string, StreamableHTTPServerTransport> = {}
   app.post('/mcp', async (req: any, res: any) => {
@@ -169,18 +268,24 @@ async function startHttp(): Promise<void> {
     }
   })
   app.get('/mcp', (_req: any, res: any) => res.status(405).set('Allow', 'POST').send('Method Not Allowed'))
-  const port = Number(process.env.PORT ?? 3000)
-  app.listen(port, (error?: Error) => {
+  app.listen(config.port, config.host, (error?: Error) => {
     if (error) {
       console.error(error)
       process.exit(1)
     }
-    console.error(\`MCP Streamable HTTP listening on http://localhost:\${port}/mcp\`)
+    const displayHost = config.host === '0.0.0.0' ? 'localhost' : config.host
+    console.error(\`MCP Streamable HTTP listening on http://\${displayHost}:\${config.port}/mcp\`)
   })
 }
 
-if (process.env.MCP_TRANSPORT === 'http') startHttp()
-else startStdio()
+try {
+  const config = getConfig()
+  if (config.transport === 'http') await startHttp(config)
+  else await startStdio()
+} catch (error) {
+  console.error(error instanceof Error ? error.message : error)
+  process.exit(1)
+}
 `
 }
 

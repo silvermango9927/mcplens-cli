@@ -32,11 +32,10 @@ describe('generated MCP server execution', () => {
         args: [path.join(dir, 'dist/index.js')],
         cwd: dir,
         stderr: 'pipe',
-        env: {
-          ...stringEnv(process.env),
+        env: generatedEnv({
           AGENTIFY_BASE_URL: `http://127.0.0.1:${address.port}`,
           TRACKLY_API_TOKEN: 'test-token'
-        }
+        })
       })
       await client.connect(transport)
 
@@ -53,6 +52,27 @@ describe('generated MCP server execution', () => {
     } finally {
       await client.close().catch(() => undefined)
       await new Promise<void>((resolve) => mockServer?.close(() => resolve()) ?? resolve())
+      await rm(dir, { recursive: true, force: true })
+    }
+  }, 120_000)
+
+  it('fails fast with a clear error when required upstream auth is missing', async () => {
+    const dir = await mkdtemp(path.join(tmpdir(), 'agentify-generated-missing-auth-'))
+
+    try {
+      const manifest = ManifestSchema.parse(await readJsonFile('tests/fixtures/trackly.manifest.json'))
+      await generateProject(manifest, dir)
+      await run('npm', ['install', '--silent'], dir)
+      await run('npm', ['run', 'build'], dir)
+
+      const result = await runForExit(process.execPath, [path.join(dir, 'dist/index.js')], dir, generatedEnv({
+        AGENTIFY_BASE_URL: 'http://127.0.0.1:1'
+      }))
+
+      expect(result.code).toBe(1)
+      expect(result.output).toContain('Invalid runtime configuration')
+      expect(result.output).toContain('missing required env var TRACKLY_API_TOKEN')
+    } finally {
       await rm(dir, { recursive: true, force: true })
     }
   }, 120_000)
@@ -100,10 +120,9 @@ describe('generated MCP server execution', () => {
         args: [path.join(dir, 'dist/index.js')],
         cwd: dir,
         stderr: 'pipe',
-        env: {
-          ...stringEnv(process.env),
+        env: generatedEnv({
           AGENTIFY_BASE_URL: `http://127.0.0.1:${address.port}`
-        }
+        })
       })
       await client.connect(transport)
 
@@ -192,6 +211,34 @@ function run(command: string, args: string[], cwd: string): Promise<void> {
     })
     child.on('error', reject)
   })
+}
+
+function runForExit(
+  command: string,
+  args: string[],
+  cwd: string,
+  env: Record<string, string>
+): Promise<{ code: number | null; output: string }> {
+  return new Promise((resolve, reject) => {
+    const child = spawn(command, args, { cwd, env, stdio: ['ignore', 'pipe', 'pipe'] })
+    let output = ''
+    child.stdout.on('data', (chunk) => {
+      output += chunk.toString()
+    })
+    child.stderr.on('data', (chunk) => {
+      output += chunk.toString()
+    })
+    child.on('close', (code) => resolve({ code, output }))
+    child.on('error', reject)
+  })
+}
+
+function generatedEnv(overrides: Record<string, string>): Record<string, string> {
+  const env = stringEnv(process.env)
+  for (const key of ['MCP_TRANSPORT', 'HOST', 'PORT', 'AGENTIFY_BASE_URL', 'TRACKLY_API_TOKEN']) {
+    delete env[key]
+  }
+  return { ...env, ...overrides }
 }
 
 function stringEnv(env: NodeJS.ProcessEnv): Record<string, string> {
