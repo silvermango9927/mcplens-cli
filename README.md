@@ -9,6 +9,8 @@ TypeScript transforms. The generated MCP server makes no LLM calls at runtime.
 
 ## Commands
 
+Requires Node.js 20 or newer.
+
 ```sh
 npm install
 npm run build
@@ -38,6 +40,27 @@ npm run cli -- build --manifest agentify.manifest.json --out ./trackly-mcp
 
 The build command writes the project, runs `npm install`, runs `tsc`, and smoke-tests
 MCP `tools/list` over stdio. Use `--no-verify` to only emit files.
+
+## Package Smoke Test
+
+Before handing off a release tarball, run:
+
+```sh
+npm run smoke:pack
+```
+
+That command builds `dist`, runs `npm pack`, verifies the tarball includes the CLI and
+the generated-server mapping runtime, installs the tarball into a temporary project, and
+runs `agentify --help`.
+
+The equivalent manual flow is:
+
+```sh
+npm run build
+npm pack
+npm install -g ./agentify-*.tgz
+agentify --help
+```
 
 ## Sample Payload Format
 
