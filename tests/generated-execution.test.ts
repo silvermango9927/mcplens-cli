@@ -1,6 +1,6 @@
 import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process'
 import { createServer, type Server } from 'node:http'
-import { mkdtemp, rm } from 'node:fs/promises'
+import { mkdtemp, readFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { Client } from '@modelcontextprotocol/sdk/client/index.js'
@@ -11,6 +11,41 @@ import { ManifestSchema } from '../src/manifest/schema.js'
 import { readJsonFile } from '../src/util/fs.js'
 
 describe('generated MCP server execution', () => {
+  it('emits generated self-hosting artifacts with expected runtime env vars', async () => {
+    const dir = await mkdtemp(path.join(tmpdir(), 'agentify-generated-artifacts-'))
+
+    try {
+      const manifest = ManifestSchema.parse(await readJsonFile('tests/fixtures/trackly.manifest.json'))
+      await generateProject(manifest, dir)
+
+      const envExample = await readFile(path.join(dir, '.env.example'), 'utf8')
+      expect(envExample).toContain('MCP_TRANSPORT=http')
+      expect(envExample).toContain('HOST=0.0.0.0')
+      expect(envExample).toContain('PORT=3000')
+      expect(envExample).toContain('MCP_HTTP_TOKEN=change-me')
+      expect(envExample).toContain('AGENTIFY_BASE_URL=https://api.trackly.example')
+      expect(envExample).toContain('TRACKLY_API_TOKEN=')
+
+      const dockerfile = await readFile(path.join(dir, 'Dockerfile'), 'utf8')
+      expect(dockerfile).toContain('FROM node:20-slim AS build')
+      expect(dockerfile).toContain('FROM node:20-slim AS runtime')
+      expect(dockerfile).toContain('RUN npm run build')
+      expect(dockerfile).toContain('RUN npm install --omit=dev')
+      expect(dockerfile).toContain('EXPOSE 3000')
+
+      const compose = await readFile(path.join(dir, 'docker-compose.yml'), 'utf8')
+      expect(compose).toContain('env_file:')
+      expect(compose).toContain('- .env')
+      expect(compose).toContain('MCP_TRANSPORT: ${MCP_TRANSPORT:-http}')
+      expect(compose).toContain('MCP_HTTP_TOKEN: ${MCP_HTTP_TOKEN:?set MCP_HTTP_TOKEN in .env}')
+      expect(compose).toContain('AGENTIFY_BASE_URL: ${AGENTIFY_BASE_URL:?set AGENTIFY_BASE_URL in .env}')
+      expect(compose).toContain('TRACKLY_API_TOKEN: ${TRACKLY_API_TOKEN:?set TRACKLY_API_TOKEN in .env}')
+      expect(compose).toContain('"3000:3000"')
+    } finally {
+      await rm(dir, { recursive: true, force: true })
+    }
+  })
+
   it('calls a mocked upstream and returns lean structured content', async () => {
     const dir = await mkdtemp(path.join(tmpdir(), 'agentify-generated-exec-'))
     const sample = await readJsonFile<{ response: unknown }>('tests/fixtures/bloated-api/samples/get-issue.json')
@@ -77,78 +112,110 @@ describe('generated MCP server execution', () => {
     }
   }, 120_000)
 
-  it('sends generated body params as a JSON request body', async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), 'agentify-generated-body-exec-'))
-    let mockServer: Server | undefined
-    const observedRequest: { contentType?: string | string[]; body?: unknown } = {}
-    const client = new Client({ name: 'agentify-test-client', version: '0.1.0' })
+  for (const testCase of [
+    {
+      method: 'POST' as const,
+      toolName: 'create_issue',
+      requestPathTemplate: '/repos/{owner}/{repo}/issues',
+      observedPath: '/repos/octo-org/hello-world/issues',
+      params: [],
+      args: {},
+      upstreamResponse: { number: 42, title: 'Bug report', state: 'open' },
+      expectedContent: { number: 42, title: 'Bug report' }
+    },
+    {
+      method: 'PATCH' as const,
+      toolName: 'update_issue',
+      requestPathTemplate: '/repos/{owner}/{repo}/issues/{issue_number}',
+      observedPath: '/repos/octo-org/hello-world/issues/42',
+      params: [
+        { name: 'issue_number', in: 'path' as const, type: 'number' as const, required: true, description: 'Issue number' }
+      ],
+      args: { issue_number: 42 },
+      upstreamResponse: { number: 42, title: 'Updated title', state: 'open' },
+      expectedContent: { number: 42, title: 'Updated title' }
+    }
+  ]) {
+    it(`sends generated ${testCase.method} body params as a JSON request body`, async () => {
+      const dir = await mkdtemp(path.join(tmpdir(), 'agentify-generated-body-exec-'))
+      let mockServer: Server | undefined
+      const observedRequest: { contentType?: string | string[]; body?: unknown } = {}
+      const client = new Client({ name: 'agentify-test-client', version: '0.1.0' })
 
-    try {
-      const manifest = ManifestSchema.parse({
-        agentifyVersion: 1,
-        api: { name: 'GitHub Lite', baseUrl: 'https://api.github.example', auth: { type: 'none' } },
-        tools: [
-          {
-            name: 'create_issue',
-            description: 'Create an issue',
-            params: [
-              { name: 'owner', in: 'path', type: 'string', required: true, description: 'Repository owner' },
-              { name: 'repo', in: 'path', type: 'string', required: true, description: 'Repository name' },
-              { name: 'title', in: 'body', type: 'string', required: true, description: 'Issue title' },
-              { name: 'body', in: 'body', type: 'string', required: false, description: 'Issue body' },
-              { name: 'labels', in: 'body', type: 'string[]', required: false, description: 'Issue labels' }
-            ],
-            requests: [{ key: 'main', method: 'POST', path: '/repos/{owner}/{repo}/issues' }],
-            responseMap: [
-              { from: 'number', to: 'number', reason: 'Issue number' },
-              { from: 'title', to: 'title', reason: 'Issue title' }
-            ]
-          }
-        ],
-        hiddenEndpoints: []
-      })
-      await generateProject(manifest, dir)
-      await run('npm', ['install', '--silent'], dir)
-      await run('npm', ['run', 'build'], dir)
-
-      mockServer = await startMockGitHubLite(observedRequest)
-      const address = mockServer.address()
-      if (!address || typeof address === 'string') throw new Error('Mock server did not bind to a port')
-
-      const transport = new StdioClientTransport({
-        command: process.execPath,
-        args: [path.join(dir, 'dist/index.js')],
-        cwd: dir,
-        stderr: 'pipe',
-        env: generatedEnv({
-          AGENTIFY_BASE_URL: `http://127.0.0.1:${address.port}`
+      try {
+        const manifest = ManifestSchema.parse({
+          agentifyVersion: 1,
+          api: { name: 'GitHub Lite', baseUrl: 'https://api.github.example', auth: { type: 'none' } },
+          tools: [
+            {
+              name: testCase.toolName,
+              description: 'Create or update an issue',
+              params: [
+                { name: 'owner', in: 'path', type: 'string', required: true, description: 'Repository owner' },
+                { name: 'repo', in: 'path', type: 'string', required: true, description: 'Repository name' },
+                ...testCase.params,
+                { name: 'title', in: 'body', type: 'string', required: true, description: 'Issue title' },
+                { name: 'body', in: 'body', type: 'string', required: false, description: 'Issue body' },
+                { name: 'labels', in: 'body', type: 'string[]', required: false, description: 'Issue labels' }
+              ],
+              requests: [{ key: 'main', method: testCase.method, path: testCase.requestPathTemplate }],
+              responseMap: [
+                { from: 'number', to: 'number', reason: 'Issue number' },
+                { from: 'title', to: 'title', reason: 'Issue title' }
+              ]
+            }
+          ],
+          hiddenEndpoints: []
         })
-      })
-      await client.connect(transport)
+        await generateProject(manifest, dir)
+        await run('npm', ['install', '--silent'], dir)
+        await run('npm', ['run', 'build'], dir)
 
-      const result = await client.callTool({
-        name: 'create_issue',
-        arguments: {
-          owner: 'octo-org',
-          repo: 'hello-world',
+        mockServer = await startMockJsonEndpoint({
+          method: testCase.method,
+          path: testCase.observedPath,
+          responseBody: testCase.upstreamResponse,
+          observedRequest
+        })
+        const address = mockServer.address()
+        if (!address || typeof address === 'string') throw new Error('Mock server did not bind to a port')
+
+        const transport = new StdioClientTransport({
+          command: process.execPath,
+          args: [path.join(dir, 'dist/index.js')],
+          cwd: dir,
+          stderr: 'pipe',
+          env: generatedEnv({
+            AGENTIFY_BASE_URL: `http://127.0.0.1:${address.port}`
+          })
+        })
+        await client.connect(transport)
+
+        const result = await client.callTool({
+          name: testCase.toolName,
+          arguments: {
+            owner: 'octo-org',
+            repo: 'hello-world',
+            ...testCase.args,
+            title: 'Bug report',
+            body: 'Steps to reproduce',
+            labels: ['bug', 'triage']
+          }
+        })
+        expect(result.structuredContent).toEqual(testCase.expectedContent)
+        expect(observedRequest.contentType).toContain('application/json')
+        expect(observedRequest.body).toEqual({
           title: 'Bug report',
           body: 'Steps to reproduce',
           labels: ['bug', 'triage']
-        }
-      })
-      expect(result.structuredContent).toEqual({ number: 42, title: 'Bug report' })
-      expect(observedRequest.contentType).toContain('application/json')
-      expect(observedRequest.body).toEqual({
-        title: 'Bug report',
-        body: 'Steps to reproduce',
-        labels: ['bug', 'triage']
-      })
-    } finally {
-      await client.close().catch(() => undefined)
-      await new Promise<void>((resolve) => mockServer?.close(() => resolve()) ?? resolve())
-      await rm(dir, { recursive: true, force: true })
-    }
-  }, 120_000)
+        })
+      } finally {
+        await client.close().catch(() => undefined)
+        await new Promise<void>((resolve) => mockServer?.close(() => resolve()) ?? resolve())
+        await rm(dir, { recursive: true, force: true })
+      }
+    }, 120_000)
+  }
 
   it('protects Streamable HTTP with bearer auth and exposes health probes', async () => {
     const dir = await mkdtemp(path.join(tmpdir(), 'agentify-generated-http-'))
@@ -210,6 +277,57 @@ describe('generated MCP server execution', () => {
       await rm(dir, { recursive: true, force: true })
     }
   }, 120_000)
+
+  const dockerE2E = process.env.AGENTIFY_DOCKER_E2E === '1' ? it : it.skip
+  dockerE2E('builds and runs the generated Docker image with HTTP readiness probes', async () => {
+    const dir = await mkdtemp(path.join(tmpdir(), 'agentify-generated-docker-'))
+    const imageName = `agentify-generated-e2e:${process.pid}-${Date.now()}`
+    let containerId: string | undefined
+
+    try {
+      const manifest = ManifestSchema.parse(await readJsonFile('tests/fixtures/trackly.manifest.json'))
+      await generateProject(manifest, dir)
+      await run('docker', ['build', '-t', imageName, '.'], dir)
+
+      containerId = (await runCapture('docker', [
+        'run',
+        '--rm',
+        '-d',
+        '-p',
+        '127.0.0.1::3000',
+        '-e',
+        'MCP_TRANSPORT=http',
+        '-e',
+        'HOST=0.0.0.0',
+        '-e',
+        'PORT=3000',
+        '-e',
+        'MCP_HTTP_TOKEN=test-http-token',
+        '-e',
+        'AGENTIFY_BASE_URL=http://127.0.0.1:1',
+        '-e',
+        'TRACKLY_API_TOKEN=test-token',
+        imageName
+      ], dir)).trim()
+
+      const port = parseDockerPublishedPort(await runCapture('docker', ['port', containerId, '3000/tcp'], dir))
+      const baseUrl = `http://127.0.0.1:${port}`
+      await waitForUrl(`${baseUrl}/healthz`)
+
+      await expect(fetchJson(`${baseUrl}/healthz`)).resolves.toMatchObject({
+        status: 200,
+        body: { ok: true }
+      })
+      await expect(fetchJson(`${baseUrl}/readyz`)).resolves.toMatchObject({
+        status: 200,
+        body: { ok: true }
+      })
+    } finally {
+      if (containerId) await runForExit('docker', ['rm', '-f', containerId], dir, stringEnv(process.env))
+      await runForExit('docker', ['image', 'rm', '-f', imageName], dir, stringEnv(process.env))
+      await rm(dir, { recursive: true, force: true })
+    }
+  }, 240_000)
 })
 
 function startMockTrackly(responseBody: unknown): Promise<Server> {
@@ -230,20 +348,25 @@ function startMockTrackly(responseBody: unknown): Promise<Server> {
   })
 }
 
-function startMockGitHubLite(observedRequest: { contentType?: string | string[]; body?: unknown }): Promise<Server> {
+function startMockJsonEndpoint(options: {
+  method: string
+  path: string
+  responseBody: unknown
+  observedRequest: { contentType?: string | string[]; body?: unknown }
+}): Promise<Server> {
   const server = createServer((req, res) => {
     const url = new URL(req.url ?? '/', 'http://127.0.0.1')
-    if (req.method === 'POST' && url.pathname === '/repos/octo-org/hello-world/issues') {
-      observedRequest.contentType = req.headers['content-type']
+    if (req.method === options.method && url.pathname === options.path) {
+      options.observedRequest.contentType = req.headers['content-type']
       let raw = ''
       req.on('data', (chunk) => {
         raw += chunk.toString()
       })
       req.on('end', () => {
-        observedRequest.body = JSON.parse(raw)
+        options.observedRequest.body = JSON.parse(raw)
         res.statusCode = 201
         res.setHeader('content-type', 'application/json')
-        res.end(JSON.stringify({ number: 42, title: 'Bug report', state: 'open' }))
+        res.end(JSON.stringify(options.responseBody))
       })
       return
     }
@@ -269,6 +392,25 @@ function run(command: string, args: string[], cwd: string): Promise<void> {
     child.on('close', (code) => {
       if (code === 0) resolve()
       else reject(new Error(`${command} ${args.join(' ')} failed with ${code}\n${output}`))
+    })
+    child.on('error', reject)
+  })
+}
+
+function runCapture(command: string, args: string[], cwd: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const child = spawn(command, args, { cwd, stdio: ['ignore', 'pipe', 'pipe'] })
+    let stdout = ''
+    let stderr = ''
+    child.stdout.on('data', (chunk) => {
+      stdout += chunk.toString()
+    })
+    child.stderr.on('data', (chunk) => {
+      stderr += chunk.toString()
+    })
+    child.on('close', (code) => {
+      if (code === 0) resolve(stdout)
+      else reject(new Error(`${command} ${args.join(' ')} failed with ${code}\n${stdout}${stderr}`))
     })
     child.on('error', reject)
   })
@@ -350,6 +492,20 @@ async function waitForHttpServer(server: GeneratedHttpServer): Promise<void> {
   throw new Error(`Timed out waiting for generated HTTP server\n${server.output()}`)
 }
 
+async function waitForUrl(url: string): Promise<void> {
+  const deadline = Date.now() + 20_000
+  while (Date.now() < deadline) {
+    try {
+      const response = await fetch(url)
+      if (response.ok) return
+    } catch {
+      // Server is still starting.
+    }
+    await delay(100)
+  }
+  throw new Error(`Timed out waiting for ${url}`)
+}
+
 async function stopGeneratedHttpServer(server: GeneratedHttpServer | undefined): Promise<void> {
   if (!server) return
   if (server.child.exitCode !== null) return
@@ -397,6 +553,12 @@ function getFreePort(): Promise<number> {
       server.close(() => resolve(address.port))
     })
   })
+}
+
+function parseDockerPublishedPort(output: string): number {
+  const match = output.match(/:(\d+)\s*$/)
+  if (!match) throw new Error(`Could not parse Docker published port from: ${output}`)
+  return Number(match[1])
 }
 
 function delay(ms: number): Promise<void> {
