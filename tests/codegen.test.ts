@@ -18,6 +18,29 @@ describe('generateProject', () => {
       await expect(readFile(path.join(dir, 'src/lib/config.ts'), 'utf8')).resolves.toContain('AGENTIFY_BASE_URL')
       await expect(readFile(path.join(dir, 'src/tools/get_issue.ts'), 'utf8')).resolves.toContain('applyResponseMap')
       await expect(readFile(path.join(dir, 'README.md'), 'utf8')).resolves.toContain('TRACKLY_API_TOKEN')
+
+      const envExample = await readFile(path.join(dir, '.env.example'), 'utf8')
+      expect(envExample).toContain('MCP_TRANSPORT=http')
+      expect(envExample).toContain('HOST=0.0.0.0')
+      expect(envExample).toContain('PORT=3000')
+      expect(envExample).toContain('MCP_HTTP_TOKEN=change-me')
+      expect(envExample).toContain('AGENTIFY_BASE_URL=https://api.trackly.example')
+      expect(envExample).toContain('TRACKLY_API_TOKEN=')
+
+      const dockerfile = await readFile(path.join(dir, 'Dockerfile'), 'utf8')
+      expect(dockerfile).toContain('FROM node:20-slim AS build')
+      expect(dockerfile).toContain('FROM node:20-slim AS runtime')
+      expect(dockerfile).toContain('RUN npm run build')
+      expect(dockerfile).toContain('RUN npm install --omit=dev')
+      expect(dockerfile).toContain('EXPOSE 3000')
+
+      const compose = await readFile(path.join(dir, 'docker-compose.yml'), 'utf8')
+      expect(compose).toContain('env_file:')
+      expect(compose).toContain('- .env')
+      expect(compose).toContain('MCP_TRANSPORT: ${MCP_TRANSPORT:-http}')
+      expect(compose).toContain('MCP_HTTP_TOKEN: ${MCP_HTTP_TOKEN:?set MCP_HTTP_TOKEN in .env}')
+      expect(compose).toContain('TRACKLY_API_TOKEN: ${TRACKLY_API_TOKEN:?set TRACKLY_API_TOKEN in .env}')
+      expect(compose).toContain('"3000:3000"')
     } finally {
       await rm(dir, { recursive: true, force: true })
     }
