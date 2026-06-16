@@ -13,6 +13,9 @@ describe('generateProject', () => {
       const manifest = ManifestSchema.parse(await readJsonFile('tests/fixtures/trackly.manifest.json'))
       await generateProject(manifest, dir)
       await expect(readFile(path.join(dir, 'src/index.ts'), 'utf8')).resolves.toContain('registerGetIssue(server)')
+      await expect(readFile(path.join(dir, 'src/lib/config.ts'), 'utf8')).resolves.toContain('TRACKLY_API_TOKEN')
+      await expect(readFile(path.join(dir, 'src/lib/config.ts'), 'utf8')).resolves.toContain('MCP_TRANSPORT')
+      await expect(readFile(path.join(dir, 'src/lib/config.ts'), 'utf8')).resolves.toContain('AGENTIFY_BASE_URL')
       await expect(readFile(path.join(dir, 'src/tools/get_issue.ts'), 'utf8')).resolves.toContain('applyResponseMap')
       await expect(readFile(path.join(dir, 'README.md'), 'utf8')).resolves.toContain('TRACKLY_API_TOKEN')
     } finally {
