@@ -49,6 +49,66 @@ export function tsconfigTemplate(): string {
   )
 }
 
+export function envExampleTemplate(manifest: Manifest): string {
+  const lines = [
+    'MCP_TRANSPORT=http',
+    'HOST=0.0.0.0',
+    'PORT=3000',
+    'MCP_HTTP_TOKEN=change-me',
+    `AGENTIFY_BASE_URL=${manifest.api.baseUrl}`,
+    ...authEnvVars(manifest.api.auth).map((name) => `${name}=`)
+  ]
+  return lines.join('\n')
+}
+
+export function dockerfileTemplate(): string {
+  return `FROM node:20-slim AS build
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm install
+
+COPY . .
+RUN npm run build
+
+FROM node:20-slim AS runtime
+
+WORKDIR /app
+ENV NODE_ENV=production
+
+COPY package*.json ./
+RUN npm install --omit=dev
+
+COPY --from=build /app/dist ./dist
+
+EXPOSE 3000
+CMD ["node", "dist/index.js"]
+`
+}
+
+export function dockerComposeTemplate(manifest: Manifest): string {
+  const environment = [
+    '      MCP_TRANSPORT: ${MCP_TRANSPORT:-http}',
+    '      HOST: ${HOST:-0.0.0.0}',
+    '      PORT: ${PORT:-3000}',
+    '      MCP_HTTP_TOKEN: ${MCP_HTTP_TOKEN:?set MCP_HTTP_TOKEN in .env}',
+    '      AGENTIFY_BASE_URL: ${AGENTIFY_BASE_URL:?set AGENTIFY_BASE_URL in .env}',
+    ...authEnvVars(manifest.api.auth).map((name) => `      ${name}: \${${name}:?set ${name} in .env}`)
+  ].join('\n')
+
+  return `services:
+  mcp:
+    build: .
+    env_file:
+      - .env
+    environment:
+${environment}
+    ports:
+      - "3000:3000"
+`
+}
+
 export function configTemplate(manifest: Manifest): string {
   return `type McpTransport = 'stdio' | 'http'
 
@@ -367,6 +427,12 @@ function authInstructions(auth: ManifestAuth): string {
   if (auth.type === 'header') return `export ${auth.envVar}=...`
   if (auth.type === 'basic') return `export ${auth.userEnvVar}=...\nexport ${auth.passEnvVar}=...`
   return '# No upstream auth env vars were inferred'
+}
+
+function authEnvVars(auth: ManifestAuth): string[] {
+  if (auth.type === 'bearer' || auth.type === 'header') return [auth.envVar]
+  if (auth.type === 'basic') return [auth.userEnvVar, auth.passEnvVar]
+  return []
 }
 
 function slug(value: string): string {
