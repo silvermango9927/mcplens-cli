@@ -127,3 +127,42 @@ export interface ActivationAuditReport {
   funnelFindings: FunnelFinding[]
   abTestPlan: string[]
 }
+
+export type CapabilityExposure = 'default' | 'admin' | 'contextual' | 'hidden'
+
+export interface CapabilityTool {
+  currentName: string
+  name: string
+  description: string
+  workflow: string
+  role: ToolRole
+  profile: 'core' | 'admin'
+  exposure: CapabilityExposure
+  annotations: {
+    priorityHint: number
+  }
+  rationale: string
+}
+
+export interface CapabilityProfile {
+  name: 'core' | 'admin'
+  rationale: string
+  tools: string[]
+}
+
+export interface AuditMcpCapabilities {
+  agentifyCapabilitiesVersion: 1
+  summary: {
+    toolCount: number
+    workflowCount?: number
+    coreToolCount: number
+    adminToolCount: number
+    defaultToolCount: number
+    contextualToolCount: number
+    manifestBytes?: number
+  }
+  profiles: CapabilityProfile[]
+  tools: CapabilityTool[]
+  instrumentationEvents: string[]
+  notes: string[]
+}

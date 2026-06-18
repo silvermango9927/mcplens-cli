@@ -39,6 +39,7 @@ program
   .option('--missed-prompts <path>', 'JSON or JSONL prompts where a tool should have been called')
   .option('--out <path>', 'Markdown audit report output path')
   .option('--json <path>', 'Machine-readable audit report output path')
+  .option('--capabilities <path>', 'Machine-readable recommended MCP capability/profile plan output path')
   .option('--offline', 'Run deterministic offline audit (currently the only mode)')
   .action(async (opts) => runAuditMcpCommand(opts))
 

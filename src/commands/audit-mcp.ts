@@ -1,4 +1,5 @@
 import path from 'node:path'
+import { buildAuditCapabilities } from '../audit/capabilities.js'
 import { loadAuditLogs, loadMissedPrompts, loadToolsList } from '../audit/loaders.js'
 import { buildAuditReport } from '../audit/recommend.js'
 import { renderMarkdownReport } from '../audit/report.js'
@@ -10,6 +11,7 @@ export interface AuditMcpCommandOptions {
   missedPrompts?: string
   out?: string
   json?: string
+  capabilities?: string
   offline?: boolean
 }
 
@@ -32,6 +34,12 @@ export async function runAuditMcpCommand(options: AuditMcpCommandOptions): Promi
     const jsonPath = path.resolve(options.json)
     await writeJsonFile(jsonPath, report)
     console.log(`Wrote JSON audit report ${jsonPath}`)
+  }
+
+  if (options.capabilities) {
+    const capabilitiesPath = path.resolve(options.capabilities)
+    await writeJsonFile(capabilitiesPath, buildAuditCapabilities(report))
+    console.log(`Wrote MCP capabilities plan ${capabilitiesPath}`)
   }
 
   const markdown = renderMarkdownReport(report)

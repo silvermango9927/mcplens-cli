@@ -346,6 +346,30 @@ returning lean responses.
 
 ---
 
+## 11. Audit an existing MCP server
+
+If you already have an MCP server, `audit-mcp` can inspect its `tools/list` surface and
+optional usage logs without requiring an OpenAPI spec:
+
+```sh
+npm run cli -- audit-mcp \
+  --tools-list path/to/tools-list.json \
+  --logs path/to/mcp-events.jsonl \
+  --missed-prompts path/to/missed-prompts.json \
+  --out activation-report.md \
+  --json activation-report.json \
+  --capabilities mcp-capabilities.json \
+  --offline
+```
+
+The Markdown and JSON reports explain activation friction, workflow fanout, weak tool
+descriptions, profile recommendations, and contribution-funnel instrumentation to add.
+The optional `--capabilities` file is a machine-readable plan with recommended core/admin
+profiles, rewritten capability names and descriptions, priority hints, and contextual
+exposure guidance for helper tools such as `confirm_*` and `reject_*`.
+
+---
+
 ## End-to-end example (copy-paste)
 
 Wrap the bundled Stripe fixture and run it, with no API key required:

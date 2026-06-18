@@ -2,6 +2,7 @@ import { mkdtemp, readFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { describe, expect, it } from 'vitest'
+import { buildAuditCapabilities } from '../src/audit/capabilities.js'
 import { loadAuditLogs, loadMissedPrompts, loadToolsList } from '../src/audit/loaders.js'
 import { buildAuditReport } from '../src/audit/recommend.js'
 import { renderMarkdownReport } from '../src/audit/report.js'
@@ -29,24 +30,41 @@ describe('MCP activation audit report', () => {
     expect(markdown).toContain('## Privacy/Safety Friction Review')
     expect(markdown).toContain('draft_public_solution')
     expect(markdown).toContain('priorityHint')
+
+    const capabilities = buildAuditCapabilities(report)
+    expect(capabilities.agentifyCapabilitiesVersion).toBe(1)
+    expect(capabilities.profiles.find((profile) => profile.name === 'core')?.tools).toContain('draft_public_solution')
+    expect(capabilities.tools.find((tool) => tool.currentName === 'submit_learning')).toMatchObject({
+      name: 'draft_public_solution',
+      exposure: 'default',
+      annotations: { priorityHint: 0.7 }
+    })
+    expect(capabilities.tools.find((tool) => tool.currentName === 'confirm_compression')).toMatchObject({
+      exposure: 'contextual'
+    })
+    expect(capabilities.instrumentationEvents).toContain('policy_block')
   })
 
-  it('writes markdown and JSON from the CLI command', async () => {
+  it('writes markdown, JSON, and capabilities from the CLI command', async () => {
     const dir = await mkdtemp(path.join(tmpdir(), 'agentify-audit-'))
     try {
       const md = path.join(dir, 'activation-report.md')
       const json = path.join(dir, 'activation-report.json')
+      const capabilities = path.join(dir, 'mcp-capabilities.json')
       await runAuditMcpCommand({
         toolsList: 'tests/fixtures/mcp-activation/tools-list.json',
         logs: 'tests/fixtures/mcp-activation/events.jsonl',
         missedPrompts: 'tests/fixtures/mcp-activation/missed-prompts.json',
         out: md,
         json,
+        capabilities,
         offline: true
       })
       await expect(readFile(md, 'utf8')).resolves.toContain('MCP Activation Audit')
       const parsed = JSON.parse(await readFile(json, 'utf8')) as { summary: { toolCount: number } }
       expect(parsed.summary.toolCount).toBe(13)
+      const parsedCapabilities = JSON.parse(await readFile(capabilities, 'utf8')) as { agentifyCapabilitiesVersion: number }
+      expect(parsedCapabilities.agentifyCapabilitiesVersion).toBe(1)
     } finally {
       await rm(dir, { recursive: true, force: true })
     }
