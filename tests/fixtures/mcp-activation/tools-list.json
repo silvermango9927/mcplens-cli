@@ -1,0 +1,149 @@
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "tools": [
+      {
+        "name": "search_learnings",
+        "description": "Search shared learnings.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "query": { "type": "string", "description": "Problem, error, or setup issue to search for." }
+          },
+          "required": ["query"]
+        },
+        "annotations": { "priorityHint": 1 }
+      },
+      {
+        "name": "search_open_issues",
+        "description": "Use when: the user may be hitting a known unresolved issue. Returns matching open issues.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "query": { "type": "string", "description": "Known error or issue symptom." }
+          },
+          "required": ["query"]
+        },
+        "annotations": { "priorityHint": 0.7 }
+      },
+      {
+        "name": "submit_learning",
+        "description": "Submit an item.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "title": { "type": "string" },
+            "body": { "type": "string" }
+          },
+          "required": ["title", "body"]
+        }
+      },
+      {
+        "name": "confirm_learning",
+        "description": "Confirm a submitted learning.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "pendingId": { "type": "string", "description": "Pending learning id." }
+          },
+          "required": ["pendingId"]
+        },
+        "annotations": { "priorityHint": 0.2 }
+      },
+      {
+        "name": "reject_learning",
+        "description": "Reject a submitted learning.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "pendingId": { "type": "string", "description": "Pending learning id." }
+          },
+          "required": ["pendingId"]
+        },
+        "annotations": { "priorityHint": 0.2 }
+      },
+      {
+        "name": "report_learning",
+        "description": "Use when: a returned learning helped solve the user's issue. Records usefulness feedback.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "learningId": { "type": "string", "description": "Learning id that helped the user." }
+          },
+          "required": ["learningId"]
+        }
+      },
+      {
+        "name": "record_agent_usage",
+        "description": "Record agent usage.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "client": { "type": "string", "description": "MCP client name." }
+          }
+        }
+      },
+      {
+        "name": "get_compression_candidates",
+        "description": "Find compression candidates.",
+        "inputSchema": { "type": "object", "properties": {} }
+      },
+      {
+        "name": "compress_learnings",
+        "description": "Compress learnings.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "ids": { "type": "array", "items": { "type": "string" } }
+          },
+          "required": ["ids"]
+        }
+      },
+      {
+        "name": "confirm_compression",
+        "description": "Confirm compression.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "pendingId": { "type": "string" }
+          },
+          "required": ["pendingId"]
+        }
+      },
+      {
+        "name": "request_delete_addendum",
+        "description": "Request delete addendum.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "addendumId": { "type": "string" }
+          },
+          "required": ["addendumId"]
+        }
+      },
+      {
+        "name": "confirm_delete_addendum",
+        "description": "Confirm delete addendum.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "pendingId": { "type": "string" }
+          },
+          "required": ["pendingId"]
+        }
+      },
+      {
+        "name": "reject_delete_addendum",
+        "description": "Reject delete addendum.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "pendingId": { "type": "string" }
+          },
+          "required": ["pendingId"]
+        }
+      }
+    ]
+  }
+}

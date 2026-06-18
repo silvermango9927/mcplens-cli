@@ -47,6 +47,23 @@ The generated folder includes `ACTIVATE.md`, `mcp-client.config.json`, and
 `mcp-activation.json` so you can enable the MCP server in a client without hand-writing
 absolute paths or credential env var names.
 
+Audit an existing MCP server's tool activation surface:
+
+```sh
+npm run cli -- audit-mcp \
+  --tools-list path/to/tools-list.json \
+  --logs path/to/mcp-events.jsonl \
+  --missed-prompts path/to/missed-prompts.json \
+  --out activation-report.md \
+  --json activation-report.json
+```
+
+`audit-mcp` is deterministic/offline in this version. It accepts an MCP `tools/list`
+response or a bare tool array, optional JSONL usage events, and optional missed prompts.
+The report identifies low-discoverability tools, confirm/reject fanout, workflow groups,
+profile recommendations such as `core` vs `admin`, safer tool description rewrites, and
+missing contribution-funnel instrumentation.
+
 ## Install From A Tarball
 
 Until `agentify` is published to npm, you can install the package produced by this repo:
