@@ -8,7 +8,10 @@ import {
   dockerComposeTemplate,
   dockerfileTemplate,
   envExampleTemplate,
+  activationJsonTemplate,
+  activationGuideTemplate,
   indexTemplate,
+  mcpClientConfigTemplate,
   packageJsonTemplate,
   readmeTemplate,
   tsconfigTemplate,
@@ -21,6 +24,9 @@ export async function generateProject(manifest: Manifest, outDir: string): Promi
   await writeTextFile(path.join(outDir, '.env.example'), envExampleTemplate(manifest))
   await writeTextFile(path.join(outDir, 'Dockerfile'), dockerfileTemplate())
   await writeTextFile(path.join(outDir, 'docker-compose.yml'), dockerComposeTemplate(manifest))
+  await writeTextFile(path.join(outDir, 'mcp-activation.json'), activationJsonTemplate(manifest, outDir))
+  await writeTextFile(path.join(outDir, 'mcp-client.config.json'), mcpClientConfigTemplate(manifest, outDir))
+  await writeTextFile(path.join(outDir, 'ACTIVATE.md'), activationGuideTemplate(manifest, outDir))
   await writeTextFile(path.join(outDir, 'README.md'), readmeTemplate(manifest))
   await writeTextFile(path.join(outDir, 'src/index.ts'), indexTemplate(manifest))
   await writeTextFile(path.join(outDir, 'src/lib/config.ts'), configTemplate(manifest))

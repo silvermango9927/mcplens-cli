@@ -17,6 +17,8 @@ export async function runBuildCommand(options: BuildCommandOptions): Promise<voi
   const outDir = path.resolve(options.out ?? `${slug(manifest.api.name)}-mcp`)
   await generateProject(manifest, outDir)
   console.log(`Generated ${outDir}`)
+  console.log(`Activation guide: ${path.join(outDir, 'ACTIVATE.md')}`)
+  console.log(`MCP client config: ${path.join(outDir, 'mcp-client.config.json')}`)
   if (options.verify === false) return
 
   let result = await verifyGeneratedProject(outDir)
