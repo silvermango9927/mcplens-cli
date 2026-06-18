@@ -241,6 +241,9 @@ The generated project is self-contained and looks like this:
 my-mcp/
 ├── package.json
 ├── tsconfig.json
+├── ACTIVATE.md             # exact activation steps for this output directory
+├── mcp-client.config.json  # ready-to-copy mcpServers snippet
+├── mcp-activation.json     # machine-readable activation metadata
 ├── README.md              # run instructions specific to this server
 └── src/
     ├── index.ts           # stdio + Streamable HTTP entry point
@@ -272,6 +275,7 @@ Optional runtime overrides understood by the generated server:
 |---------|---------|---------|
 | `AGENTIFY_BASE_URL` | Override the upstream base URL (e.g. point at a sandbox) | manifest `baseUrl` |
 | `MCP_TRANSPORT` | `http` to serve over Streamable HTTP; otherwise stdio | stdio |
+| `MCP_HTTP_TOKEN` | Bearer token required by HTTP mode | none |
 | `PORT` | HTTP port when `MCP_TRANSPORT=http` | `3000` |
 
 ---
@@ -289,21 +293,24 @@ npm start
 **Streamable HTTP (for serving over a network):**
 
 ```sh
-MCP_TRANSPORT=http PORT=3000 npm start
+MCP_TRANSPORT=http MCP_HTTP_TOKEN=replace-with-a-long-random-token PORT=3000 npm start
 # serves MCP at http://localhost:3000/mcp
 ```
 
-> 🔒 **Don't expose the HTTP endpoint directly to the public internet.** In this version the
-> HTTP transport has no built-in auth or TLS. If you must serve it remotely, put it behind a
-> reverse proxy that adds TLS and authentication, or keep it bound to localhost / a private
-> network.
+Clients must send `Authorization: Bearer $MCP_HTTP_TOKEN`. Do not expose `/mcp` directly
+to the public internet without TLS, a strong token, and a trusted reverse proxy or
+firewall.
 
 ---
 
 ## 10. Connect it to an MCP client
 
-Most clients launch the server over stdio. Point them at the built entry file
-(`my-mcp/dist/index.js`) with `node`, and pass your credential env var(s).
+Open the generated `ACTIVATE.md` first. It contains paths and commands for the exact
+output directory you built.
+
+Most clients launch the server over stdio. `mcp-client.config.json` contains a
+ready-to-copy `mcpServers` object that points at the built entry file
+(`my-mcp/dist/index.js`) with `node` and includes the inferred credential env vars.
 
 **Claude Desktop** — add to `claude_desktop_config.json`
 (`~/Library/Application Support/Claude/` on macOS):
@@ -325,6 +332,9 @@ Most clients launch the server over stdio. Point them at the built entry file
 ```sh
 claude mcp add stripe --env STRIPE_API_TOKEN=sk_live_… -- node /absolute/path/to/my-mcp/dist/index.js
 ```
+
+The generated `ACTIVATE.md` prints this command with your server name and absolute
+entrypoint path filled in.
 
 Restart the client, and your curated tools (`customers_get`, `customers_list`, …) appear,
 returning lean responses.

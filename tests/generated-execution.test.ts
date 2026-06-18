@@ -41,6 +41,22 @@ describe('generated MCP server execution', () => {
       expect(compose).toContain('AGENTIFY_BASE_URL: ${AGENTIFY_BASE_URL:?set AGENTIFY_BASE_URL in .env}')
       expect(compose).toContain('TRACKLY_API_TOKEN: ${TRACKLY_API_TOKEN:?set TRACKLY_API_TOKEN in .env}')
       expect(compose).toContain('"3000:3000"')
+
+      const activation = JSON.parse(await readFile(path.join(dir, 'mcp-activation.json'), 'utf8'))
+      expect(activation.stdio).toMatchObject({
+        command: 'node',
+        args: [path.join(dir, 'dist/index.js')],
+        env: { TRACKLY_API_TOKEN: '<TRACKLY_API_TOKEN>' }
+      })
+      expect(activation.claudeCode.command).toContain('claude mcp add trackly')
+
+      const clientConfig = await readFile(path.join(dir, 'mcp-client.config.json'), 'utf8')
+      expect(clientConfig).toContain('"mcpServers"')
+      expect(clientConfig).toContain(path.join(dir, 'dist/index.js'))
+
+      const activationGuide = await readFile(path.join(dir, 'ACTIVATE.md'), 'utf8')
+      expect(activationGuide).toContain('## 3. Activate In A Local MCP Client')
+      expect(activationGuide).toContain('Authorization: Bearer $MCP_HTTP_TOKEN')
     } finally {
       await rm(dir, { recursive: true, force: true })
     }

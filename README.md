@@ -43,6 +43,10 @@ npm run cli -- build --manifest agentify.manifest.json --out ./trackly-mcp
 The build command writes the project, runs `npm install`, runs `tsc`, and smoke-tests
 MCP `tools/list` over stdio. Use `--no-verify` to only emit files.
 
+The generated folder includes `ACTIVATE.md`, `mcp-client.config.json`, and
+`mcp-activation.json` so you can enable the MCP server in a client without hand-writing
+absolute paths or credential env var names.
+
 ## Install From A Tarball
 
 Until `agentify` is published to npm, you can install the package produced by this repo:
@@ -108,6 +112,9 @@ match generated tools.
 Generated projects are standalone TypeScript MCP servers. Each generated project includes:
 
 - `README.md` with setup, stdio, HTTP, Docker Compose, and client connection notes.
+- `ACTIVATE.md` with generated activation steps for the exact output directory.
+- `mcp-client.config.json` with a ready-to-copy `mcpServers` stdio config.
+- `mcp-activation.json` with machine-readable stdio, Claude Code, and HTTP activation metadata.
 - `.env.example` listing transport, HTTP token, upstream base URL, and inferred auth env vars.
 - `Dockerfile` and `docker-compose.yml` for self-hosting.
 - `src/lib/config.ts` runtime validation that fails fast when required env vars are missing.
@@ -120,6 +127,11 @@ npm install
 npm run build
 npm start
 ```
+
+To activate the server in a client, open the generated `ACTIVATE.md`. For clients that
+accept an `mcpServers` object, copy `mcp-client.config.json` and replace placeholder
+credentials. For Claude Code, use the generated `claude mcp add ...` command in
+`ACTIVATE.md`.
 
 They also include Streamable HTTP support for self-hosting:
 

@@ -30,6 +30,43 @@ describe('generateProject', () => {
       expect(readme).toContain('## Docker Compose')
       expect(readme).toContain('docker compose up --build')
 
+      const activation = JSON.parse(await readFile(path.join(dir, 'mcp-activation.json'), 'utf8'))
+      expect(activation).toMatchObject({
+        agentifyActivationVersion: 1,
+        serverName: 'trackly',
+        displayName: 'Trackly MCP',
+        projectDir: dir,
+        stdio: {
+          command: 'node',
+          args: [path.join(dir, 'dist/index.js')],
+          env: { TRACKLY_API_TOKEN: '<TRACKLY_API_TOKEN>' }
+        },
+        streamableHttp: {
+          url: 'http://127.0.0.1:3000/mcp',
+          healthUrl: 'http://127.0.0.1:3000/healthz'
+        }
+      })
+      expect(activation.claudeCode.command).toBe(
+        `claude mcp add trackly --env TRACKLY_API_TOKEN="$TRACKLY_API_TOKEN" -- node ${path.join(dir, 'dist/index.js')}`
+      )
+
+      const clientConfig = JSON.parse(await readFile(path.join(dir, 'mcp-client.config.json'), 'utf8'))
+      expect(clientConfig).toEqual({
+        mcpServers: {
+          trackly: {
+            command: 'node',
+            args: [path.join(dir, 'dist/index.js')],
+            env: { TRACKLY_API_TOKEN: '<TRACKLY_API_TOKEN>' }
+          }
+        }
+      })
+
+      const activationGuide = await readFile(path.join(dir, 'ACTIVATE.md'), 'utf8')
+      expect(activationGuide).toContain('# Activate Trackly MCP')
+      expect(activationGuide).toContain('mcp-client.config.json')
+      expect(activationGuide).toContain('claude mcp add trackly')
+      expect(activationGuide).toContain(path.join(dir, 'dist/index.js'))
+
       const envExample = await readFile(path.join(dir, '.env.example'), 'utf8')
       expect(envExample).toContain('MCP_TRANSPORT=http')
       expect(envExample).toContain('HOST=0.0.0.0')
