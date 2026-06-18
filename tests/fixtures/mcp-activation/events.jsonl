@@ -1,0 +1,12 @@
+{"type":"initialize","sessionId":"s1"}
+{"method":"tools/list","session_id":"s1"}
+{"method":"tools/call","session_id":"s1","params":{"name":"search_learnings"},"ok":true}
+{"method":"tools/call","session_id":"s1","params":{"name":"report_learning"},"ok":true}
+{"type":"initialize","sessionId":"s2"}
+{"method":"tools/call","session_id":"s2","params":{"name":"search_learnings"},"ok":true}
+{"method":"tools/call","session_id":"s2","params":{"name":"submit_learning"},"ok":false,"error":"missing title"}
+{"type":"problem_solved","sessionId":"s2"}
+{"type":"draft_created","sessionId":"s2","tool":"submit_learning"}
+{"type":"user_confirmation_shown","sessionId":"s2","tool":"confirm_learning"}
+{"type":"policy_block","sessionId":"s2","tool":"submit_learning","reason":"possible_pii"}
+{"type":"initialize","sessionId":"s3"}

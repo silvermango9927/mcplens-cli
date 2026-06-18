@@ -1,0 +1,12 @@
+[
+  {
+    "prompt": "I'm getting an MCP auth error when connecting Cursor. Has anyone solved this?",
+    "expectedTools": ["search_learnings"],
+    "notes": "Should search known fixes before inventing an answer."
+  },
+  {
+    "prompt": "This workaround fixed the package setup issue. Can we share it for other agents?",
+    "expectedTools": ["submit_learning"],
+    "notes": "Should draft a reusable public-safe solution, not publish directly."
+  }
+]
