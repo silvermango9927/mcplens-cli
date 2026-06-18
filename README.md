@@ -55,7 +55,8 @@ npm run cli -- audit-mcp \
   --logs path/to/mcp-events.jsonl \
   --missed-prompts path/to/missed-prompts.json \
   --out activation-report.md \
-  --json activation-report.json
+  --json activation-report.json \
+  --capabilities mcp-capabilities.json
 ```
 
 `audit-mcp` is deterministic/offline in this version. It accepts an MCP `tools/list`
@@ -63,6 +64,10 @@ response or a bare tool array, optional JSONL usage events, and optional missed 
 The report identifies low-discoverability tools, confirm/reject fanout, workflow groups,
 profile recommendations such as `core` vs `admin`, safer tool description rewrites, and
 missing contribution-funnel instrumentation.
+
+Use `--capabilities` to write a machine-readable plan with recommended core/admin
+profiles, rewritten capability names and descriptions, priority hints, exposure guidance
+for contextual tools, and instrumentation events to add next.
 
 ## Install From A Tarball
 
