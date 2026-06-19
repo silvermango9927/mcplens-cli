@@ -1,9 +1,9 @@
-# agentify — Impact Report
+# MCPLens — Impact Report
 
 How much does compiling a bloated REST API into a lean, agent-optimized MCP server
-actually save? This report runs `agentify` against five public API fixtures modeled on
-the documented response shapes of widely-used, famously bloated APIs, plus the built-in
-Trackly fixture as a baseline, and measures two dimensions of impact:
+actually save? This report runs MCPLens against five public API fixtures modeled on the
+documented response shapes of widely-used, famously bloated APIs, plus a small Trackly
+fixture as a baseline, and measures two dimensions of impact:
 
 1. **Tool-surface curation** — how many raw endpoints collapse into agent-useful tools,
    and how many UI/admin/webhook endpoints get hidden.
@@ -38,9 +38,9 @@ better on *field selection* (see [Caveats](#caveats)).
 Why this matters: a coding/automation agent pays the response-token cost on **every single
 tool call**, and pays the tool-list cost on **every turn**. An 80% cut to response size
 compounds across a conversation, and a leaner tool list reduces tool-selection errors.
-The example manifests also have semantic smoke tests that assert core fields like issue
-title/state/body, event start/end, page title/status, user email, and customer email survive
-the compression.
+The example manifests also have semantic checks that assert core fields like issue
+title/state/body, event start/end, page title/status, user email, and customer email
+survive the compression.
 
 ## Per-API detail
 
@@ -73,15 +73,15 @@ Nested deprecated list objects (`sources`, `subscriptions`, `tax_ids` each with
 `object`/`data`/`has_more`/`total_count`/`url`), `invoice_settings`, and many null internal
 fields. 1.9 KB → 394 bytes. Hidden: webhook endpoints, oauth, admin account close.
 
-### Trackly — built-in fixture → 43%
-The repo's existing 4-endpoint fixture. Its sample is small (~200 tokens), so the absolute
-win is modest; included as the baseline. Note the *hand-curated* manifest in
+### Trackly — small baseline fixture → 43%
+Trackly is a compact 4-endpoint fixture. Its sample is small (~200 tokens), so the
+absolute win is modest; it is included as the baseline. Note the *hand-curated* manifest in
 `tests/fixtures/trackly.manifest.json` reaches **72%** on the same sample — the gap between
 43% and 72% is the gap between the offline heuristic and good curation.
 
 ## Caveats
 
-These numbers are honest, but read them with two qualifications:
+Read these numbers with two qualifications:
 
 1. **Offline field *selection* is still heuristic.** The heuristic now favors top-level
    semantic fields over nested metadata URLs and the tests assert the public examples keep
@@ -108,7 +108,7 @@ Each example lives under [`examples/`](examples/) with its `openapi.json`, a rec
 Regenerate any of them:
 
 ```sh
-npm run cli -- compile \
+npx mcplens-cli compile \
   --spec examples/github/openapi.json \
   --samples examples/github/samples \
   --impact-report examples/github/impact-report.json \

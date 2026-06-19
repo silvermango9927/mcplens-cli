@@ -1,26 +1,23 @@
-# agentify — Build Your Own MCP Server from Any API
+# MCPLens — Build Your Own MCP Server from Any API
 
 This is a step-by-step guide for turning a bloated REST API into a lean, agent-optimized
 **MCP (Model Context Protocol) server** that you can plug into Claude, Cursor, or any other
 MCP client.
 
-You bring an **OpenAPI spec** (the machine-readable description of an API). `agentify` does
-the rest: it picks the tools worth exposing, strips the junk out of every response, writes
-those decisions to an editable file, and generates a standalone TypeScript MCP server you
-can run anywhere.
-
-No prior knowledge of this repo's internals is required. If you can copy-paste shell
-commands, you can follow this guide.
+You bring an **OpenAPI spec** (the machine-readable description of an API). MCPLens helps
+pick the tools worth exposing, strips the junk out of every response, writes those
+decisions to an editable manifest, and generates a standalone TypeScript MCP server you can
+run anywhere.
 
 ---
 
 ## What you'll end up with
 
 ```
-your API's OpenAPI spec  ──►  agentify compile  ──►  agentify.manifest.json  (editable)
+your API's OpenAPI spec  --->  mcplens compile  --->  agentify.manifest.json  (editable)
                                                             │
                                                             ▼
-                                                     agentify build
+                                                     mcplens build
                                                             │
                                                             ▼
                                           a standalone MCP server (its own folder)
@@ -48,33 +45,40 @@ Two facts worth knowing up front:
 | **An OpenAPI 3.x spec** (JSON or YAML) | The description of the API you want to wrap | see [Step 3](#3-get-an-openapi-spec-for-your-api) |
 | *(Optional)* **`ANTHROPIC_API_KEY`** | Better tool/field curation via Claude | [Anthropic Console](https://console.anthropic.com/) |
 
-You do **not** need an API key to try `agentify` — it falls back to deterministic
+You do **not** need an API key to try MCPLens — it falls back to deterministic
 heuristics. The key just produces a better-curated server.
 
 ---
 
-## 2. Install agentify
+## 2. Install MCPLens
 
-Clone the repo and build the CLI:
+You can run MCPLens directly with `npx`:
 
 ```sh
-git clone <this-repo-url> agentify
-cd agentify
+npx mcplens-cli --help
+```
+
+Or install it globally:
+
+```sh
+npm install -g mcplens-cli
+mcplens --help
+```
+
+If you want to run from a repo checkout:
+
+```sh
+git clone https://github.com/silvermango9927/mcplens-cli.git
+cd mcplens-cli
 npm install
 npm run build
 ```
-
-Throughout this guide, commands are run from the repo root using `npm run cli -- <command>`.
-For example, `npm run cli -- compile --help`.
-
-> **Tip:** `npm run cli -- <command>` runs the CLI straight from source, so you don't need
-> to rebuild after pulling changes.
 
 ---
 
 ## 3. Get an OpenAPI spec for your API
 
-`agentify` reads a standard **OpenAPI 3.x** document. Most popular APIs publish one:
+MCPLens reads a standard **OpenAPI 3.x** document. Most popular APIs publish one:
 
 - **GitHub:** <https://github.com/github/rest-api-description>
 - **Stripe:** <https://github.com/stripe/openapi>
@@ -94,7 +98,7 @@ ls tests/fixtures/bloated-api/openapi.json
 
 ## 4. *(Optional but recommended)* Record sample responses
 
-Samples are real (or realistic) response payloads. They let `agentify` see exactly which
+Samples are real (or realistic) response payloads. They let MCPLens see exactly which
 fields are bloat, so it produces a sharper response map and a more accurate token-savings
 report.
 
@@ -125,7 +129,7 @@ This is the one step where the LLM (optionally) gets involved. It analyzes your 
 samples and writes an editable `agentify.manifest.json`.
 
 ```sh
-npm run cli -- compile \
+npx mcplens-cli compile \
   --spec my-api.json \
   --samples my-samples \
   --impact-report impact-report.json \
@@ -218,7 +222,7 @@ This generates a standalone TypeScript project, installs its dependencies, type-
 and runs a smoke test that lists the tools over MCP stdio.
 
 ```sh
-npm run cli -- build --manifest agentify.manifest.json --out ./my-mcp
+npx mcplens-cli build --manifest agentify.manifest.json --out ./my-mcp
 ```
 
 | Flag | Meaning |
@@ -255,7 +259,7 @@ my-mcp/
         └── …
 ```
 
-It depends only on the MCP SDK and `zod` — no `agentify`, no LLM SDK at runtime.
+It depends only on the MCP SDK and `zod` — no MCPLens package and no LLM SDK at runtime.
 
 ---
 
@@ -340,7 +344,7 @@ Restart the client, and your curated tools (`customers_get`, `customers_list`, �
 returning lean responses.
 
 > Use **absolute paths** — clients don't run from your shell's working directory. The
-> `dist/` folder exists because `agentify build` ran `tsc` for you (skip this only if you
+> `dist/` folder exists because `mcplens build` ran `tsc` for you (skip this only if you
 > used `--no-verify`, in which case run `npm install && npm run build` inside `my-mcp`
 > first).
 
@@ -352,7 +356,7 @@ If you already have an MCP server, `audit-mcp` can inspect its `tools/list` surf
 optional usage logs without requiring an OpenAPI spec:
 
 ```sh
-npm run cli -- audit-mcp \
+npx mcplens-cli audit-mcp \
   --tools-list path/to/tools-list.json \
   --logs path/to/mcp-events.jsonl \
   --missed-prompts path/to/missed-prompts.json \
@@ -364,9 +368,9 @@ npm run cli -- audit-mcp \
 
 The Markdown and JSON reports explain activation friction, workflow fanout, weak tool
 descriptions, profile recommendations, and contribution-funnel instrumentation to add.
-The optional `--capabilities` file is a machine-readable plan with recommended core/admin
-profiles, rewritten capability names and descriptions, priority hints, and contextual
-exposure guidance for helper tools such as `confirm_*` and `reject_*`.
+The optional `--capabilities` file contains machine-readable recommendations for
+core/admin profiles, rewritten capability names and descriptions, priority hints, and
+contextual exposure guidance for helper tools such as `confirm_*` and `reject_*`.
 
 ---
 
@@ -375,11 +379,10 @@ exposure guidance for helper tools such as `confirm_*` and `reject_*`.
 Wrap the bundled Stripe fixture and run it, with no API key required:
 
 ```sh
-# from the agentify repo root
-npm install && npm run build
+# from a mcplens-cli repo checkout
 
 # 1. compile (offline = no Anthropic key needed)
-npm run cli -- compile \
+npx mcplens-cli compile \
   --spec examples/stripe/openapi.json \
   --samples examples/stripe/samples \
   --impact-report stripe-impact.json \
@@ -389,7 +392,7 @@ npm run cli -- compile \
 # 2. (open stripe.manifest.json, tidy up tool descriptions / responseMap)
 
 # 3. build the server
-npm run cli -- build --manifest stripe.manifest.json --out ./stripe-mcp
+npx mcplens-cli build --manifest stripe.manifest.json --out ./stripe-mcp
 
 # 4. give it credentials and run
 cd stripe-mcp

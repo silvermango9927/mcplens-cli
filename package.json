@@ -1,9 +1,9 @@
 {
   "name": "mcplens-cli",
   "version": "0.1.2",
-  "description": "Audit MCP tool activation locally and compile bloated APIs into lean, agent-optimized MCP servers",
+  "description": "Audit MCP tool activation locally and generate lean MCP servers from OpenAPI specs",
   "license": "MIT",
-  "author": "silvermango9927",
+  "author": "MCPLens contributors",
   "type": "module",
   "repository": {
     "type": "git",

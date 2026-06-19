@@ -1,6 +1,6 @@
-# agentify examples
+# MCPLens examples
 
-Real-world-shaped API fixtures used to measure agentify's impact. See the aggregated
+Real-world-shaped API fixtures used to measure MCPLens impact. See the aggregated
 results in [`../IMPACT.md`](../IMPACT.md).
 
 Each directory contains:
@@ -34,7 +34,7 @@ Source docs used for the fixtures:
 
 ```sh
 for api in github stripe slack google-calendar notion; do
-  npm run cli -- compile \
+  npx mcplens-cli compile \
     --spec "examples/$api/openapi.json" \
     --samples "examples/$api/samples" \
     --impact-report "examples/$api/impact-report.json" \
