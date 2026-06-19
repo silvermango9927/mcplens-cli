@@ -1,18 +1,18 @@
 {
   "name": "mcplens-cli",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "Audit MCP tool activation locally and compile bloated APIs into lean, agent-optimized MCP servers",
   "license": "MIT",
   "author": "silvermango9927",
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/silvermango9927/agentify.git"
+    "url": "git+https://github.com/silvermango9927/mcplens-cli.git"
   },
   "bugs": {
-    "url": "https://github.com/silvermango9927/agentify/issues"
+    "url": "https://github.com/silvermango9927/mcplens-cli/issues"
   },
-  "homepage": "https://github.com/silvermango9927/agentify#readme",
+  "homepage": "https://github.com/silvermango9927/mcplens-cli#readme",
   "keywords": [
     "mcplens",
     "mcp",

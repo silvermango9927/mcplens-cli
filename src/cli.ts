@@ -9,7 +9,7 @@ const program = new Command()
 program
   .name('mcplens')
   .description('Audit MCP tool activation locally and compile bloated APIs into lean MCP servers')
-  .version('0.1.0')
+  .version('0.1.2')
 
 program
   .command('audit-mcp')
