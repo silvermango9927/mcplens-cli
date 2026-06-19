@@ -1,5 +1,5 @@
 {
-  "name": "@silvermango9927/mcplens",
+  "name": "mcplens-cli",
   "version": "0.1.0",
   "description": "Audit MCP tool activation locally and compile bloated APIs into lean, agent-optimized MCP servers",
   "license": "MIT",

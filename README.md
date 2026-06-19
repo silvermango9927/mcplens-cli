@@ -16,7 +16,7 @@ machine, and no network or LLM calls are made.
 Run it directly with `npx`, no install required (Node.js 20+):
 
 ```sh
-npx @silvermango9927/mcplens audit-mcp --tools-list tools.json --logs events.jsonl --out report.md
+npx mcplens-cli audit-mcp --tools-list tools.json --logs events.jsonl --out report.md
 ```
 
 - `--tools-list <path>` — an MCP `tools/list` response or a bare tool array (required).
@@ -45,7 +45,7 @@ missing contribution-funnel instrumentation.
 Add `--json` and `--capabilities` to emit structured artifacts alongside the Markdown:
 
 ```sh
-npx @silvermango9927/mcplens audit-mcp \
+npx mcplens-cli audit-mcp \
   --tools-list tools.json \
   --logs events.jsonl \
   --missed-prompts missed-prompts.json \
@@ -99,10 +99,10 @@ client without hand-writing absolute paths or credential env var names.
 
 ## Install
 
-Run without installing via `npx @silvermango9927/mcplens ...`, or install globally:
+Run without installing via `npx mcplens-cli ...`, or install globally:
 
 ```sh
-npm install -g @silvermango9927/mcplens
+npm install -g mcplens-cli
 mcplens --help
 mcplens audit-mcp --tools-list tools.json --out report.md
 ```
@@ -121,7 +121,7 @@ To install the package produced by this repo without publishing:
 ```sh
 npm run build
 npm pack
-npm install -g ./silvermango9927-mcplens-*.tgz
+npm install -g ./mcplens-cli-*.tgz
 mcplens --help
 ```
 
