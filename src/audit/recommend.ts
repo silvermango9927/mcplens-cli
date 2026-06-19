@@ -27,13 +27,25 @@ export function buildAuditReport(options: BuildAuditReportOptions): ActivationAu
   const profiles = buildProfiles(tools)
   const mergedTools = buildMergeRecommendations(tools)
   const missedPromptFindings = analyzeMissedPrompts(options.tools, options.missedPrompts)
-  const recommendedToolCount = profiles.find((profile) => profile.name === 'core')?.tools.length ?? recommendedTools.length
   const confirmRejectToolCount = tools.filter((tool) => tool.role === 'confirm' || tool.role === 'reject').length
+
+  // Reconcile the two views of "core" so the markdown report and the capabilities
+  // plan agree: the core profile is every non-admin tool, but only the ones that are
+  // not pushed to contextual exposure are shown in the default surface.
+  const hiddenNames = new Set(hiddenTools.map((hidden) => hidden.tool))
+  const coreProfileTools = profiles.find((profile) => profile.name === 'core')?.tools ?? recommendedTools.map((tool) => tool.currentName)
+  const adminProfileToolCount = profiles.find((profile) => profile.name === 'admin')?.tools.length ?? 0
+  const defaultVisibleTools = coreProfileTools.filter((name) => !hiddenNames.has(name))
+  const contextualToolCount = coreProfileTools.length - defaultVisibleTools.length
+  const recommendedToolCount = defaultVisibleTools.length
 
   return {
     summary: {
       toolCount: tools.length,
       recommendedToolCount,
+      coreProfileToolCount: coreProfileTools.length,
+      adminProfileToolCount,
+      contextualToolCount,
       initializedSessions: usage.initializedSessions,
       sessionsWithToolCall: usage.sessionsWithToolCall,
       activationRate: usage.activationRate,
@@ -66,28 +78,29 @@ export function buildAuditReport(options: BuildAuditReportOptions): ActivationAu
 }
 
 function buildProfiles(tools: ToolAudit[]): ProfileRecommendation[] {
-  const coreTools = tools
-    .filter((tool) => {
-      if (tool.role === 'admin' || tool.role === 'destructive') return false
-      if (tool.role === 'confirm' || tool.role === 'reject') return tool.callCount > 0
-      return true
-    })
-    .map((tool) => tool.name)
-  const adminTools = tools
-    .filter((tool) => tool.role === 'admin' || tool.role === 'destructive' || tool.role === 'confirm' || tool.role === 'reject')
-    .map((tool) => tool.name)
+  // A tool's profile is decided solely by role so that this list, the per-tool
+  // recommendations, and the capabilities plan never disagree. Confirm/reject helpers
+  // stay in the core profile (they belong to ordinary user flows) but are surfaced
+  // contextually rather than in the default tools/list.
+  const coreTools = tools.filter((tool) => !isAdminRole(tool.role)).map((tool) => tool.name)
+  const adminTools = tools.filter((tool) => isAdminRole(tool.role)).map((tool) => tool.name)
   return [
     {
       name: 'core',
       tools: coreTools,
-      rationale: 'Default surface for ordinary agent sessions: preserve visible read/feedback flows and safe contribution starts.'
+      rationale:
+        'Default surface for ordinary agent sessions. Read/feedback/contribution tools stay visible; confirm/reject helpers belong here too but should be exposed contextually, not in the default tools/list.'
     },
     {
       name: 'admin',
       tools: adminTools,
-      rationale: 'Maintenance, destructive, and helper confirmation tools should not compete with high-value default workflows.'
+      rationale: 'Maintenance and destructive capabilities should not compete with high-value default workflows.'
     }
   ]
+}
+
+function isAdminRole(role: ToolAudit['role']): boolean {
+  return role === 'admin' || role === 'destructive'
 }
 
 function buildHiddenTools(tools: ToolAudit[]): HiddenToolRecommendation[] {
@@ -110,16 +123,13 @@ function buildHiddenTools(tools: ToolAudit[]): HiddenToolRecommendation[] {
 }
 
 function buildRecommendedTools(tools: ToolAudit[]): RecommendedTool[] {
-  return tools.map((tool) => {
-    const profile = tool.role === 'admin' || tool.role === 'destructive' ? 'admin' : 'core'
-    return {
-      currentName: tool.name,
-      recommendedName: recommendedName(tool),
-      recommendedDescription: recommendedDescription(tool),
-      profile,
-      priorityHint: recommendedPriority(tool)
-    }
-  })
+  return tools.map((tool) => ({
+    currentName: tool.name,
+    recommendedName: recommendedName(tool),
+    recommendedDescription: recommendedDescription(tool),
+    profile: isAdminRole(tool.role) ? 'admin' : 'core',
+    advisoryPriority: recommendedPriority(tool)
+  }))
 }
 
 function buildMergeRecommendations(tools: ToolAudit[]): MergeRecommendation[] {

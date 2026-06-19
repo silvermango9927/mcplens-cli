@@ -21,15 +21,26 @@ describe('MCP activation audit report', () => {
     expect(report.hiddenTools.map((tool) => tool.tool)).toContain('confirm_compression')
     expect(report.recommendedTools.find((tool) => tool.currentName === 'submit_learning')).toMatchObject({
       recommendedName: 'draft_public_solution',
-      priorityHint: 0.7
+      advisoryPriority: 0.7
     })
     expect(report.missedPromptFindings).toHaveLength(2)
+
+    // Fix 3(b): the markdown report and the capabilities plan must agree on what "core" means.
+    // Core profile = every non-admin tool; default-visible + contextual helpers must sum to it.
+    const coreProfile = report.profiles.find((profile) => profile.name === 'core')
+    expect(report.summary.coreProfileToolCount).toBe(coreProfile?.tools.length)
+    expect((report.summary.recommendedToolCount ?? 0) + (report.summary.contextualToolCount ?? 0)).toBe(
+      report.summary.coreProfileToolCount
+    )
+    // Confirm/reject helpers live in the core profile (not admin), but are exposed contextually.
+    expect(coreProfile?.tools).toContain('confirm_learning')
 
     const markdown = renderMarkdownReport(report)
     expect(markdown).toContain('# MCP Activation Audit')
     expect(markdown).toContain('## Privacy/Safety Friction Review')
     expect(markdown).toContain('draft_public_solution')
-    expect(markdown).toContain('priorityHint')
+    // Fix 3(a): advisory priority must be framed as a non-standard hint, not a real annotation.
+    expect(markdown).toContain('advisory priority (non-standard MCP hint')
 
     const capabilities = buildAuditCapabilities(report)
     expect(capabilities.agentifyCapabilitiesVersion).toBe(1)
@@ -37,12 +48,26 @@ describe('MCP activation audit report', () => {
     expect(capabilities.tools.find((tool) => tool.currentName === 'submit_learning')).toMatchObject({
       name: 'draft_public_solution',
       exposure: 'default',
-      annotations: { priorityHint: 0.7 }
+      advisoryPriority: 0.7,
+      annotations: { readOnlyHint: false }
     })
     expect(capabilities.tools.find((tool) => tool.currentName === 'confirm_compression')).toMatchObject({
       exposure: 'contextual'
     })
     expect(capabilities.instrumentationEvents).toContain('policy_block')
+
+    // Fix 3(a): read tools advertise the real, spec-defined MCP annotations.
+    expect(capabilities.tools.find((tool) => tool.currentName === 'search_learnings')?.annotations).toMatchObject({
+      readOnlyHint: true,
+      idempotentHint: true
+    })
+    // Fix 3(a): the plan must explicitly disclaim advisoryPriority as non-standard.
+    expect(capabilities.notes.join('\n')).toMatch(/advisoryPriority.*not a standard MCP annotation/i)
+
+    // Fix 3(b): markdown report and capabilities plan agree on core / default / admin counts.
+    expect(capabilities.summary.coreToolCount).toBe(report.summary.coreProfileToolCount)
+    expect(capabilities.summary.defaultToolCount).toBe(report.summary.recommendedToolCount)
+    expect(capabilities.summary.adminToolCount).toBe(report.summary.adminProfileToolCount)
   })
 
   it('writes markdown, JSON, and capabilities from the CLI command', async () => {

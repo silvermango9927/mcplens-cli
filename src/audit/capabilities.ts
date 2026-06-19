@@ -4,8 +4,10 @@ import {
   CapabilityExposure,
   CapabilityTool,
   HiddenToolRecommendation,
+  McpToolAnnotations,
   RecommendedTool,
-  ToolAudit
+  ToolAudit,
+  ToolRole
 } from './schema.js'
 
 const INSTRUMENTATION_EVENTS = [
@@ -48,10 +50,10 @@ export function buildAuditCapabilities(report: ActivationAuditReport): AuditMcpC
     tools,
     instrumentationEvents: INSTRUMENTATION_EVENTS,
     notes: [
-      'This file is a deterministic agentify audit recommendation, not a live MCP protocol response.',
-      'Use the core profile as the default tool surface when your MCP client or server can expose profiles.',
-      'Expose contextual tools only after a pending action exists, especially confirm/reject helpers.',
-      'Priority hints are advisory; clearer names, descriptions, and smaller profiles are the primary fix.'
+      'This file is a deterministic mcplens audit recommendation, not a live MCP protocol response.',
+      'The core profile is every non-admin tool; expose its contextual members (confirm/reject helpers) only after a pending action exists, and ship the rest as the default tools/list.',
+      'Each tool\'s `annotations` are standard MCP ToolAnnotations (readOnlyHint, destructiveHint, idempotentHint, openWorldHint) — set these on your real tools so clients can reason about safety.',
+      '`advisoryPriority` is NOT a standard MCP annotation and most clients ignore it. The reliable levers are a smaller default surface, clearer trigger language, and the standard annotations above.'
     ]
   }
 }
@@ -67,11 +69,21 @@ function capabilityTool(tool: ToolAudit, recommended: RecommendedTool | undefine
     role: tool.role,
     profile,
     exposure,
-    annotations: {
-      priorityHint: recommended?.priorityHint ?? tool.priorityHint ?? defaultPriorityForExposure(exposure)
-    },
+    annotations: standardAnnotations(tool.role),
+    advisoryPriority: recommended?.advisoryPriority ?? tool.priorityHint ?? defaultPriorityForExposure(exposure),
     rationale: rationaleFor(tool, exposure, hidden)
   }
+}
+
+/**
+ * Derive the standard MCP `ToolAnnotations` (spec 2025-06-18) from the inferred role.
+ * Only emits hints we can defend from the role: read-only and idempotent for reads,
+ * destructive for delete-like tools, and additive (non-destructive write) otherwise.
+ */
+function standardAnnotations(role: ToolRole): McpToolAnnotations {
+  if (role === 'read') return { readOnlyHint: true, idempotentHint: true }
+  if (role === 'destructive') return { readOnlyHint: false, destructiveHint: true }
+  return { readOnlyHint: false, destructiveHint: false }
 }
 
 function exposureFor(profile: 'core' | 'admin', hidden: HiddenToolRecommendation | undefined): CapabilityExposure {

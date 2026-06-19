@@ -7,7 +7,15 @@ export function renderMarkdownReport(report: ActivationAuditReport): string {
   lines.push('## Executive Summary')
   lines.push('')
   lines.push(`- Tools exposed: ${report.summary.toolCount}`)
-  lines.push(`- Recommended core tools: ${report.summary.recommendedToolCount}`)
+  lines.push(`- Default-visible tools (shown in every session): ${report.summary.recommendedToolCount}`)
+  if (report.summary.coreProfileToolCount !== undefined) {
+    lines.push(
+      `- Core profile: ${report.summary.coreProfileToolCount} (${report.summary.recommendedToolCount} default-visible + ${report.summary.contextualToolCount ?? 0} contextual helpers)`
+    )
+  }
+  if (report.summary.adminProfileToolCount !== undefined) {
+    lines.push(`- Admin profile (kept out of the default surface): ${report.summary.adminProfileToolCount}`)
+  }
   if (report.summary.workflowCount !== undefined) lines.push(`- Workflow groups: ${report.summary.workflowCount}`)
   if (report.summary.manifestBytes !== undefined) lines.push(`- tools/list payload: ${formatBytes(report.summary.manifestBytes)}`)
   if (report.summary.confirmRejectToolCount !== undefined) {
@@ -32,7 +40,7 @@ export function renderMarkdownReport(report: ActivationAuditReport): string {
 
   lines.push('## Current Tool Surface')
   lines.push('')
-  lines.push('| Tool | Workflow | Role | Score | Calls | Errors | Priority |')
+  lines.push('| Tool | Workflow | Role | Score | Calls | Errors | Declared priorityHint |')
   lines.push('| --- | --- | --- | ---: | ---: | ---: | ---: |')
   for (const tool of report.tools) {
     lines.push(
@@ -53,11 +61,17 @@ export function renderMarkdownReport(report: ActivationAuditReport): string {
 
   lines.push('## Recommended Tool Set')
   lines.push('')
+  const contextualNames = new Set(
+    report.hiddenTools.filter((hidden) => hidden.preferredAction === 'contextual_exposure').map((hidden) => hidden.tool)
+  )
   for (const profile of report.profiles) {
     lines.push(`### ${profile.name}`)
     lines.push(profile.rationale)
     lines.push('')
-    for (const tool of profile.tools) lines.push(`- \`${tool}\``)
+    for (const tool of profile.tools) {
+      const suffix = contextualNames.has(tool) ? ' — contextual (expose only when a pending action exists)' : ''
+      lines.push(`- \`${tool}\`${suffix}`)
+    }
     lines.push('')
   }
 
@@ -65,7 +79,7 @@ export function renderMarkdownReport(report: ActivationAuditReport): string {
   lines.push('')
   for (const tool of report.recommendedTools) {
     lines.push(`### ${tool.currentName} -> ${tool.recommendedName}`)
-    lines.push(`Profile: ${tool.profile}; suggested priorityHint: ${tool.priorityHint}`)
+    lines.push(`Profile: ${tool.profile}; advisory priority (non-standard MCP hint, most clients ignore): ${tool.advisoryPriority}`)
     lines.push('')
     lines.push(tool.recommendedDescription)
     lines.push('')
@@ -110,7 +124,8 @@ export function renderMarkdownReport(report: ActivationAuditReport): string {
   lines.push('- Keep public posting behind explicit user confirmation and terms acceptance.')
   lines.push('- Make the draft tool safe to call without confirmation because it does not publish.')
   lines.push('- Require the draft step to remove secrets, personal data, company/customer names, private URLs, and incident-specific details.')
-  lines.push('- Treat priority hints as advisory metadata; the main fix is a smaller default surface with clearer trigger language.')
+  lines.push('- Set the standard MCP ToolAnnotations (readOnlyHint, destructiveHint, idempotentHint, openWorldHint) on each tool so clients can reason about safety.')
+  lines.push('- `advisoryPriority` is not a standard MCP annotation and most clients ignore it; the main fix is a smaller default surface with clearer trigger language.')
 
   return `${lines.join('\n')}\n`
 }

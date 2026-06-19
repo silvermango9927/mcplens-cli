@@ -1,0 +1,64 @@
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "tools": [
+      {
+        "name": "list_repositories",
+        "description": "List repositories.",
+        "inputSchema": { "type": "object", "properties": { "owner": { "type": "string" } } }
+      },
+      {
+        "name": "search_code",
+        "description": "Use when: the user needs to find code across repositories by keyword, symbol, or file path. Returns matching files with line ranges and repository context.",
+        "inputSchema": {
+          "type": "object",
+          "properties": { "query": { "type": "string", "description": "Keyword, symbol, or path to search for across indexed repositories." } },
+          "required": ["query"]
+        }
+      },
+      {
+        "name": "get_pull_request",
+        "description": "Get a pull request.",
+        "inputSchema": { "type": "object", "properties": { "number": { "type": "number" } }, "required": ["number"] }
+      },
+      {
+        "name": "create_issue",
+        "description": "Create an issue in the tracker.",
+        "inputSchema": {
+          "type": "object",
+          "properties": { "title": { "type": "string" }, "body": { "type": "string" } },
+          "required": ["title", "body"]
+        }
+      },
+      {
+        "name": "update_issue",
+        "description": "Use when: the user asks to change an existing issue's title, body, labels, or assignees. Returns the updated issue.",
+        "inputSchema": {
+          "type": "object",
+          "properties": { "number": { "type": "number", "description": "Issue number to update." }, "fields": { "type": "object", "description": "Fields to change on the issue." } },
+          "required": ["number", "fields"]
+        }
+      },
+      {
+        "name": "merge_pull_request",
+        "description": "Merge a pull request into its base branch.",
+        "inputSchema": { "type": "object", "properties": { "number": { "type": "number" } }, "required": ["number"] }
+      },
+      {
+        "name": "delete_branch",
+        "description": "Delete a branch.",
+        "inputSchema": { "type": "object", "properties": { "branch": { "type": "string" } }, "required": ["branch"] }
+      },
+      {
+        "name": "run_ci_pipeline",
+        "description": "Trigger a CI pipeline run for a branch and wait for the result.",
+        "inputSchema": {
+          "type": "object",
+          "properties": { "branch": { "type": "string" }, "pipeline": { "type": "string" } },
+          "required": ["branch", "pipeline"]
+        }
+      }
+    ]
+  }
+}
