@@ -8,9 +8,12 @@ import { promisify } from 'node:util'
 const execFileAsync = promisify(execFile)
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 const tempDir = await mkdtemp(path.join(tmpdir(), 'mcplens-pack-smoke-'))
+const npmEnv = { ...process.env }
+delete npmEnv.npm_config_dry_run
+delete npmEnv.NPM_CONFIG_DRY_RUN
 
 try {
-  const pack = await execFileAsync('npm', ['pack', '--json', '--pack-destination', tempDir], { cwd: repoRoot })
+  const pack = await execFileAsync('npm', ['pack', '--json', '--pack-destination', tempDir], { cwd: repoRoot, env: npmEnv })
   const [packed] = JSON.parse(pack.stdout)
   if (!packed?.filename || !Array.isArray(packed.files)) throw new Error(`Unexpected npm pack output: ${pack.stdout}`)
 
@@ -22,7 +25,7 @@ try {
   const installDir = path.join(tempDir, 'install')
   await mkdir(installDir)
   const tarball = path.join(tempDir, packed.filename)
-  await execFileAsync('npm', ['install', '--silent', tarball], { cwd: installDir })
+  await execFileAsync('npm', ['install', '--silent', tarball], { cwd: installDir, env: npmEnv })
 
   const binPath = (name) =>
     path.join(installDir, 'node_modules', '.bin', process.platform === 'win32' ? `${name}.cmd` : name)

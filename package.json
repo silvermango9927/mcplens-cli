@@ -1,18 +1,18 @@
 {
-  "name": "mcplens",
+  "name": "@silvermango9927/mcplens",
   "version": "0.1.0",
   "description": "Audit MCP tool activation locally and compile bloated APIs into lean, agent-optimized MCP servers",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "author": "silvermango9927",
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/silvermango9927/agent-middleware.git"
+    "url": "git+https://github.com/silvermango9927/agentify.git"
   },
   "bugs": {
-    "url": "https://github.com/silvermango9927/agent-middleware/issues"
+    "url": "https://github.com/silvermango9927/agentify/issues"
   },
-  "homepage": "https://github.com/silvermango9927/agent-middleware#readme",
+  "homepage": "https://github.com/silvermango9927/agentify#readme",
   "keywords": [
     "mcplens",
     "mcp",
@@ -40,6 +40,8 @@
     "build": "tsc",
     "test": "vitest run --passWithNoTests",
     "cli": "tsx src/cli.ts",
+    "prepack": "npm run build",
+    "prepublishOnly": "npm run build && npm test && node tests/scripts/pack-smoke.mjs",
     "smoke:pack": "npm run build && node tests/scripts/pack-smoke.mjs"
   },
   "dependencies": {

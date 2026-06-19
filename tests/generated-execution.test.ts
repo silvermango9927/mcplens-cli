@@ -397,7 +397,7 @@ function startMockJsonEndpoint(options: {
 
 function run(command: string, args: string[], cwd: string): Promise<void> {
   return new Promise((resolve, reject) => {
-    const child = spawn(command, args, { cwd, stdio: ['ignore', 'pipe', 'pipe'] })
+    const child = spawn(command, args, { cwd, env: childProcessEnv(command), stdio: ['ignore', 'pipe', 'pipe'] })
     let output = ''
     child.stdout.on('data', (chunk) => {
       output += chunk.toString()
@@ -415,7 +415,7 @@ function run(command: string, args: string[], cwd: string): Promise<void> {
 
 function runCapture(command: string, args: string[], cwd: string): Promise<string> {
   return new Promise((resolve, reject) => {
-    const child = spawn(command, args, { cwd, stdio: ['ignore', 'pipe', 'pipe'] })
+    const child = spawn(command, args, { cwd, env: childProcessEnv(command), stdio: ['ignore', 'pipe', 'pipe'] })
     let stdout = ''
     let stderr = ''
     child.stdout.on('data', (chunk) => {
@@ -591,4 +591,12 @@ function generatedEnv(overrides: Record<string, string>): Record<string, string>
 
 function stringEnv(env: NodeJS.ProcessEnv): Record<string, string> {
   return Object.fromEntries(Object.entries(env).filter((entry): entry is [string, string] => typeof entry[1] === 'string'))
+}
+
+function childProcessEnv(command: string): NodeJS.ProcessEnv {
+  if (command !== 'npm') return process.env
+  const env = { ...process.env }
+  delete env.npm_config_dry_run
+  delete env.NPM_CONFIG_DRY_RUN
+  return env
 }
