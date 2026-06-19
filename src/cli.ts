@@ -7,9 +7,22 @@ import { runCompileCommand } from './commands/compile.js'
 const program = new Command()
 
 program
-  .name('agentify')
-  .description('Compile bloated OpenAPI-backed APIs into lean MCP servers')
+  .name('mcplens')
+  .description('Audit MCP tool activation locally and compile bloated APIs into lean MCP servers')
   .version('0.1.0')
+
+program
+  .command('audit-mcp')
+  .summary('Audit an MCP server\'s tool activation surface (local/offline)')
+  .description('Audit an existing MCP tools/list surface and observed usage logs, fully local and offline')
+  .requiredOption('--tools-list <path>', 'MCP tools/list response or bare tool array')
+  .option('--logs <path>', 'JSONL file of MCP/session events')
+  .option('--missed-prompts <path>', 'JSON or JSONL prompts where a tool should have been called')
+  .option('--out <path>', 'Markdown audit report output path')
+  .option('--json <path>', 'Machine-readable audit report output path')
+  .option('--capabilities <path>', 'Machine-readable recommended MCP capability/profile plan output path')
+  .option('--offline', 'Run deterministic offline audit (currently the only mode)')
+  .action(async (opts) => runAuditMcpCommand(opts))
 
 program
   .command('compile')
@@ -30,18 +43,6 @@ program
   .option('--out <dir>', 'Generated project output directory')
   .option('--no-verify', 'Skip npm install, tsc, and MCP stdio smoke test')
   .action(async (opts) => runBuildCommand(opts))
-
-program
-  .command('audit-mcp')
-  .description('Audit an existing MCP tools/list surface and observed usage logs')
-  .requiredOption('--tools-list <path>', 'MCP tools/list response or bare tool array')
-  .option('--logs <path>', 'JSONL file of MCP/session events')
-  .option('--missed-prompts <path>', 'JSON or JSONL prompts where a tool should have been called')
-  .option('--out <path>', 'Markdown audit report output path')
-  .option('--json <path>', 'Machine-readable audit report output path')
-  .option('--capabilities <path>', 'Machine-readable recommended MCP capability/profile plan output path')
-  .option('--offline', 'Run deterministic offline audit (currently the only mode)')
-  .action(async (opts) => runAuditMcpCommand(opts))
 
 program.parseAsync().catch((err: unknown) => {
   console.error(err instanceof Error ? err.message : String(err))

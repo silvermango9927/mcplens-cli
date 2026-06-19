@@ -1,7 +1,7 @@
 {
-  "name": "agentify",
+  "name": "mcplens",
   "version": "0.1.0",
-  "description": "Compile any bloated API into a lean, agent-optimized MCP server",
+  "description": "Audit MCP tool activation locally and compile bloated APIs into lean, agent-optimized MCP servers",
   "license": "UNLICENSED",
   "author": "silvermango9927",
   "type": "module",
@@ -14,9 +14,12 @@
   },
   "homepage": "https://github.com/silvermango9927/agent-middleware#readme",
   "keywords": [
+    "mcplens",
     "mcp",
-    "openapi",
+    "mcp-audit",
+    "tool-activation",
     "agent",
+    "openapi",
     "api",
     "codegen",
     "typescript"
@@ -25,11 +28,13 @@
     "node": ">=20"
   },
   "bin": {
+    "mcplens": "dist/cli.js",
     "agentify": "dist/cli.js"
   },
   "files": [
     "dist",
-    "src/mapping/runtime.ts"
+    "src/mapping/runtime.ts",
+    "README.md"
   ],
   "scripts": {
     "build": "tsc",
