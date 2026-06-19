@@ -73,7 +73,20 @@ export interface RecommendedTool {
   recommendedName: string
   recommendedDescription: string
   profile: 'core' | 'admin'
-  priorityHint: number
+  /** Advisory ordering hint only. NOT a standard MCP ToolAnnotations field; most clients ignore it. */
+  advisoryPriority: number
+}
+
+/**
+ * The standard MCP `ToolAnnotations` fields (spec 2025-06-18). These are the real,
+ * spec-defined hints a server can set; `priorityHint` is deliberately not here because
+ * it is not part of the MCP schema.
+ */
+export interface McpToolAnnotations {
+  readOnlyHint?: boolean
+  destructiveHint?: boolean
+  idempotentHint?: boolean
+  openWorldHint?: boolean
 }
 
 export interface HiddenToolRecommendation {
@@ -103,7 +116,14 @@ export interface FunnelFinding {
 export interface ActivationAuditReport {
   summary: {
     toolCount: number
+    /** Tools shown in the default surface (core profile minus contextual helpers). */
     recommendedToolCount: number
+    /** All non-admin tools (default-visible + contextual helpers). */
+    coreProfileToolCount?: number
+    /** Admin/destructive tools kept out of the default surface. */
+    adminProfileToolCount?: number
+    /** Confirm/reject helpers exposed only when a pending action exists. */
+    contextualToolCount?: number
     initializedSessions?: number
     sessionsWithToolCall?: number
     activationRate?: number
@@ -138,9 +158,10 @@ export interface CapabilityTool {
   role: ToolRole
   profile: 'core' | 'admin'
   exposure: CapabilityExposure
-  annotations: {
-    priorityHint: number
-  }
+  /** Standard MCP ToolAnnotations to set on this tool (spec-compliant). */
+  annotations: McpToolAnnotations
+  /** Advisory ordering hint only; not a standard MCP annotation. Honored by few clients. */
+  advisoryPriority: number
   rationale: string
 }
 
