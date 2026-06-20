@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mcplens — Make MCP servers agents can actually use</title>
+  <meta name="description" content="mcplens audits whether agents can discover your MCP tools — and compiles bloated REST APIs into lean MCP servers. Runs locally, no telemetry." />
+  <link rel="canonical" href="https://mcplens.tech/" />
+  <meta name="theme-color" content="#6366f1" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="mcplens — Make MCP servers agents can actually use" />
+  <meta property="og:description" content="Audit MCP tool discoverability and compile bloated REST APIs into lean MCP servers. Local, offline, no telemetry." />
+  <meta property="og:url" content="https://mcplens.tech/" />
+  <meta property="og:image" content="https://mcplens.tech/og.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:site_name" content="mcplens" />
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="mcplens — Make MCP servers agents can actually use" />
+  <meta name="twitter:description" content="Audit MCP tool discoverability and compile bloated REST APIs into lean MCP servers. Local, offline, no telemetry." />
+  <meta name="twitter:image" content="https://mcplens.tech/og.png" />
+
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="wordmark" href="/" aria-label="mcplens home">
+        <svg class="wordmark-mark" width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2" />
+          <circle cx="12" cy="12" r="3.4" fill="currentColor" />
+        </svg>
+        <span>mcplens</span>
+      </a>
+      <nav class="header-nav" aria-label="Primary">
+        <a href="#features">Features</a>
+        <a href="#quickstart">Quick start</a>
+        <a href="https://github.com/silvermango9927/mcplens-cli/blob/main/GUIDE.md">Guide</a>
+        <a class="nav-cta" href="https://github.com/silvermango9927/mcplens-cli">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- Hero -->
+    <section class="hero">
+      <div class="container">
+        <p class="eyebrow">Local MCP tooling · MIT licensed</p>
+        <h1>Make MCP servers agents<br class="hide-mobile" /> can actually use.</h1>
+        <p class="lede">
+          mcplens audits whether agents can discover your tools — and compiles bloated REST
+          APIs into lean MCP servers. Runs locally, no telemetry.
+        </p>
+
+        <div class="install" role="group" aria-label="Install command">
+          <code id="install-cmd">npx mcplens-cli audit-mcp --tools-list tools.json</code>
+          <button id="copy-btn" class="copy-btn" type="button" aria-label="Copy install command">Copy</button>
+        </div>
+
+        <div class="cta-row">
+          <a class="btn btn-primary" href="https://github.com/silvermango9927/mcplens-cli">Get started</a>
+          <a class="btn btn-secondary" href="https://github.com/silvermango9927/mcplens-cli/blob/main/GUIDE.md">Read the guide</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stat band -->
+    <section class="stats" aria-label="Impact">
+      <div class="container stats-grid">
+        <div class="stat">
+          <span class="stat-num">~80%</span>
+          <span class="stat-label">fewer response tokens</span>
+        </div>
+        <div class="stat">
+          <span class="stat-num">27%</span>
+          <span class="stat-label">smaller tool surface</span>
+        </div>
+        <div class="stat">
+          <span class="stat-num">100%</span>
+          <span class="stat-label">local &amp; offline</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features -->
+    <section id="features" class="features">
+      <div class="container">
+        <h2 class="section-title">Two ways to sharpen your MCP surface</h2>
+        <div class="feature-grid">
+          <article class="feature-card">
+            <div class="feature-badge"><code>audit-mcp</code></div>
+            <h3>Audit tool activation</h3>
+            <p>
+              Run a local audit against a <code>tools/list</code> export and optional usage
+              logs. The report flags what stops agents from picking the right tool.
+            </p>
+            <ul class="feature-list">
+              <li>Low-discoverability tools</li>
+              <li>Vague or overlapping descriptions</li>
+              <li>Core / admin / contextual profile boundaries</li>
+              <li>Safer naming and description rewrites</li>
+              <li>Missing instrumentation to debug failures</li>
+            </ul>
+          </article>
+
+          <article class="feature-card">
+            <div class="feature-badge"><code>compile → build</code></div>
+            <h3>OpenAPI → lean MCP server</h3>
+            <p>
+              Turn a large API surface into a smaller, agent-oriented MCP server with slimmer
+              responses — then generate a standalone TypeScript server you can ship.
+            </p>
+            <ul class="feature-list">
+              <li>Editable manifest of tools, requests &amp; response maps</li>
+              <li>Hides UI / admin / webhook endpoints from agents</li>
+              <li>Strips response cruft for ~80% smaller payloads</li>
+              <li>Standalone server: stdio, HTTP, Docker Compose</li>
+              <li>Optional one-time LLM curation, or fully offline</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- Privacy strip -->
+    <section class="privacy" aria-label="Privacy">
+      <div class="container privacy-inner">
+        <h2>Local and offline by design.</h2>
+        <p>
+          The audit path makes no network requests, no LLM calls, and sends no telemetry. It
+          reads only the files you pass in and writes only the paths you name. Your tool
+          definitions, logs, and prompts stay on your machine.
+        </p>
+      </div>
+    </section>
+
+    <!-- Quick start -->
+    <section id="quickstart" class="quickstart">
+      <div class="container">
+        <h2 class="section-title">Quick start</h2>
+        <p class="quickstart-note">Requires Node.js 20 or newer. No install needed with <code>npx</code>.</p>
+
+        <div class="code-block">
+          <div class="code-label">Audit an MCP server</div>
+          <pre><code>npx mcplens-cli audit-mcp \
+  --tools-list tools.json \
+  --logs events.jsonl \
+  --out report.md</code></pre>
+        </div>
+
+        <div class="code-block">
+          <div class="code-label">Compile an OpenAPI spec into a lean MCP server</div>
+          <pre><code>npx mcplens-cli compile \
+  --spec openapi.json \
+  --out agentify.manifest.json --offline
+
+npx mcplens-cli build \
+  --manifest agentify.manifest.json \
+  --out ./my-mcp</code></pre>
+        </div>
+
+        <p class="quickstart-note">
+          Prefer a global install? <code>npm install -g mcplens-cli</code>, then run
+          <code>mcplens --help</code>.
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <span class="wordmark">
+          <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2" />
+            <circle cx="12" cy="12" r="3.4" fill="currentColor" />
+          </svg>
+          mcplens
+        </span>
+        <p class="footer-tagline">See whether agents can actually use your MCP tools.</p>
+      </div>
+      <nav class="footer-links" aria-label="Footer">
+        <a href="https://github.com/silvermango9927/mcplens-cli">GitHub</a>
+        <a href="https://www.npmjs.com/package/mcplens-cli">npm</a>
+        <a href="https://github.com/silvermango9927/mcplens-cli/blob/main/GUIDE.md">Guide</a>
+        <a href="https://github.com/silvermango9927/mcplens-cli/blob/main/IMPACT.md">Impact report</a>
+        <a href="https://github.com/silvermango9927/mcplens-cli/blob/main/LICENSE">MIT License</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      var btn = document.getElementById('copy-btn');
+      var cmd = document.getElementById('install-cmd');
+      if (!btn || !cmd) return;
+      btn.addEventListener('click', function () {
+        navigator.clipboard.writeText(cmd.textContent.trim()).then(function () {
+          var prev = btn.textContent;
+          btn.textContent = 'Copied';
+          btn.classList.add('is-copied');
+          setTimeout(function () {
+            btn.textContent = prev;
+            btn.classList.remove('is-copied');
+          }, 1600);
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
