@@ -19,11 +19,11 @@ describe('audit works on a generic (non-learnings) MCP server', () => {
     expect(byName.get('create_issue')?.role).toBe('write')
     expect(classifyRole('git_status', { readOnlyHint: true })).toBe('read')
     expect(classifyRole('git_reset', { destructiveHint: true })).toBe('destructive')
-    // Description quality scoring is domain-independent: a "Use when" tool beats a bare one.
+    // Description quality scoring is domain-independent: a strong read tool beats a bare write tool.
     expect(byName.get('search_code')?.discoverabilityScore).toBeGreaterThan(
       byName.get('create_issue')?.discoverabilityScore ?? 100
     )
-    expect(byName.get('create_issue')?.issues.join('\n')).toMatch(/Use when/)
+    expect(byName.get('create_issue')?.findings.map((finding) => finding.id)).toContain('unsafe_write_tool')
 
     // Fix 3(b): report and capabilities agree on core/default/admin for a brand-new domain.
     const capabilities = buildAuditCapabilities(report)

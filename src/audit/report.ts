@@ -4,9 +4,30 @@ export function renderMarkdownReport(report: ActivationAuditReport): string {
   const lines: string[] = []
   lines.push('# MCP Activation Audit')
   lines.push('')
+  lines.push('## CI Verdict')
+  lines.push('')
+  lines.push(`Status: ${report.ci.status.toUpperCase()}`)
+  lines.push('')
+  lines.push(`- ${report.ci.fail} failing finding${report.ci.fail === 1 ? '' : 's'}`)
+  lines.push(`- ${report.ci.warn} warning${report.ci.warn === 1 ? '' : 's'}`)
+  lines.push(`- Average score: ${report.summary.averageScore}`)
+  if (report.baseline) lines.push(`- Baseline delta: ${formatSignedNumber(report.baseline.scoreDelta)}`)
+  lines.push('')
+  if (report.ci.fail > 0) {
+    lines.push('Blocking findings:')
+    lines.push('')
+    lines.push('| Rule | Tool | Message |')
+    lines.push('| --- | --- | --- |')
+    for (const finding of report.findings.filter((item) => item.severity === 'fail')) {
+      lines.push(`| ${finding.id} | ${finding.tool ? `\`${finding.tool}\`` : ''} | ${finding.message} |`)
+    }
+    lines.push('')
+  }
+
   lines.push('## Executive Summary')
   lines.push('')
   lines.push(`- Tools exposed: ${report.summary.toolCount}`)
+  lines.push(`- Average discoverability score: ${report.summary.averageScore}`)
   lines.push(`- Default-visible tools (shown in every session): ${report.summary.recommendedToolCount}`)
   if (report.summary.coreProfileToolCount !== undefined) {
     lines.push(
@@ -54,8 +75,27 @@ export function renderMarkdownReport(report: ActivationAuditReport): string {
   for (const tool of report.tools) {
     if (tool.issues.length === 0 && tool.recommendations.length === 0) continue
     lines.push(`### ${tool.name}`)
-    for (const issue of tool.issues) lines.push(`- Issue: ${issue}`)
+    for (const finding of tool.findings) lines.push(`- ${finding.severity.toUpperCase()} ${finding.id}: ${finding.message}`)
     for (const recommendation of tool.recommendations) lines.push(`- Recommendation: ${recommendation}`)
+    lines.push('')
+  }
+
+  if (report.baseline) {
+    lines.push('## Baseline Comparison')
+    lines.push('')
+    lines.push(`- Average score before: ${report.baseline.averageScoreBefore}`)
+    lines.push(`- Average score after: ${report.baseline.averageScoreAfter}`)
+    lines.push(`- Score delta: ${formatSignedNumber(report.baseline.scoreDelta)}`)
+    lines.push(`- New tools: ${formatList(report.baseline.newTools)}`)
+    lines.push(`- Removed tools: ${formatList(report.baseline.removedTools)}`)
+    if (report.baseline.regressedTools.length > 0) {
+      lines.push('')
+      lines.push('| Tool | Before | After | Delta |')
+      lines.push('| --- | ---: | ---: | ---: |')
+      for (const tool of report.baseline.regressedTools) {
+        lines.push(`| \`${tool.name}\` | ${tool.before} | ${tool.after} | ${formatSignedNumber(tool.delta)} |`)
+      }
+    }
     lines.push('')
   }
 
@@ -136,4 +176,12 @@ function metricLine(label: string, value: number | undefined, suffix = ''): stri
 
 function formatBytes(value: number): string {
   return value >= 1024 ? `${Math.round(value / 1024)} KB` : `${value} bytes`
+}
+
+function formatSignedNumber(value: number): string {
+  return value > 0 ? `+${value}` : String(value)
+}
+
+function formatList(values: string[]): string {
+  return values.length === 0 ? 'none' : values.map((value) => `\`${value}\``).join(', ')
 }
