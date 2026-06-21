@@ -18,11 +18,17 @@ program
   .requiredOption('--tools-list <path>', 'MCP tools/list response or bare tool array')
   .option('--logs <path>', 'JSONL file of MCP/session events')
   .option('--missed-prompts <path>', 'JSON or JSONL prompts where a tool should have been called')
+  .option('--config <path>', 'mcplens.config.json policy file')
+  .option('--baseline <path>', 'Previous audit JSON report for regression comparison')
   .option('--out <path>', 'Markdown audit report output path')
   .option('--json <path>', 'Machine-readable audit report output path')
   .option('--capabilities <path>', 'Machine-readable recommended MCP capability/profile plan output path')
+  .option('--ci', 'Enable CI summary and return nonzero when configured fail findings exist')
   .option('--offline', 'Run deterministic offline audit (currently the only mode)')
-  .action(async (opts) => runAuditMcpCommand(opts))
+  .action(async (opts) => {
+    const exitCode = await runAuditMcpCommand(opts)
+    if (exitCode !== 0) process.exitCode = exitCode
+  })
 
 program
   .command('compile')

@@ -1,6 +1,7 @@
 import {
   ActivationAuditReport,
   AuditLogEvent,
+  AuditPolicy,
   HiddenToolRecommendation,
   McpTool,
   MergeRecommendation,
@@ -9,6 +10,8 @@ import {
   RecommendedTool,
   ToolAudit
 } from './schema.js'
+import { compareAuditBaseline } from './baseline.js'
+import { resolveAuditPolicy } from './config.js'
 import { analyzeMissedPrompts, auditTools, buildWorkflowAudits, summarizeUsage } from './scoring.js'
 
 export interface BuildAuditReportOptions {
@@ -16,11 +19,14 @@ export interface BuildAuditReportOptions {
   logs: AuditLogEvent[]
   missedPrompts: MissedPrompt[]
   manifestBytes?: number
+  policy?: AuditPolicy
+  baselineReport?: unknown
 }
 
 export function buildAuditReport(options: BuildAuditReportOptions): ActivationAuditReport {
+  const policy = options.policy ?? resolveAuditPolicy({})
   const usage = summarizeUsage(options.logs)
-  const tools = auditTools(options.tools, options.logs, options.missedPrompts)
+  const tools = auditTools(options.tools, options.logs, options.missedPrompts, policy)
   const workflows = buildWorkflowAudits(tools)
   const hiddenTools = buildHiddenTools(tools)
   const recommendedTools = buildRecommendedTools(tools)
@@ -28,6 +34,10 @@ export function buildAuditReport(options: BuildAuditReportOptions): ActivationAu
   const mergedTools = buildMergeRecommendations(tools)
   const missedPromptFindings = analyzeMissedPrompts(options.tools, options.missedPrompts)
   const confirmRejectToolCount = tools.filter((tool) => tool.role === 'confirm' || tool.role === 'reject').length
+  const baseline = options.baselineReport ? compareAuditBaseline(tools, options.baselineReport, policy) : undefined
+  const findings = [...tools.flatMap((tool) => tool.findings), ...(baseline?.newFailingFindings ?? [])]
+  const ci = buildCiVerdict(findings)
+  const averageScore = averageDiscoverabilityScore(tools)
 
   // Reconcile the two views of "core" so the markdown report and the capabilities
   // plan agree: the core profile is every non-admin tool, but only the ones that are
@@ -42,6 +52,7 @@ export function buildAuditReport(options: BuildAuditReportOptions): ActivationAu
   return {
     summary: {
       toolCount: tools.length,
+      averageScore,
       recommendedToolCount,
       coreProfileToolCount: coreProfileTools.length,
       adminProfileToolCount,
@@ -59,6 +70,10 @@ export function buildAuditReport(options: BuildAuditReportOptions): ActivationAu
       workflowCount: workflows.length,
       topRecommendation: topRecommendation(tools, workflows, options.manifestBytes)
     },
+    policy,
+    ci,
+    baseline,
+    findings,
     tools,
     workflows,
     profiles,
@@ -75,6 +90,23 @@ export function buildAuditReport(options: BuildAuditReportOptions): ActivationAu
       'Track initialized sessions -> useful tool-call sessions -> draft created -> confirmation shown -> public post created.'
     ]
   }
+}
+
+function buildCiVerdict(findings: { severity: 'info' | 'warn' | 'fail' }[]): ActivationAuditReport['ci'] {
+  const info = findings.filter((finding) => finding.severity === 'info').length
+  const warn = findings.filter((finding) => finding.severity === 'warn').length
+  const fail = findings.filter((finding) => finding.severity === 'fail').length
+  return {
+    status: fail > 0 ? 'fail' : 'pass',
+    info,
+    warn,
+    fail
+  }
+}
+
+function averageDiscoverabilityScore(tools: ToolAudit[]): number {
+  if (tools.length === 0) return 0
+  return Math.round((tools.reduce((sum, tool) => sum + tool.discoverabilityScore, 0) / tools.length) * 10) / 10
 }
 
 function buildProfiles(tools: ToolAudit[]): ProfileRecommendation[] {

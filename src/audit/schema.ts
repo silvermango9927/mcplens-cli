@@ -27,6 +27,57 @@ export type McpTool = z.infer<typeof McpToolSchema>
 export type MissedPrompt = z.infer<typeof MissedPromptSchema>
 export type AuditLogEvent = z.infer<typeof AuditLogEventSchema>
 
+export type AuditProfileName = 'production' | 'local-dev' | 'read-only' | 'concise'
+
+export type AuditSeverity = 'info' | 'warn' | 'fail'
+
+export type AuditFindingId =
+  | 'missing_description'
+  | 'missing_trigger_language'
+  | 'description_too_short'
+  | 'description_too_long'
+  | 'implementation_oriented_description'
+  | 'unsafe_write_tool'
+  | 'unsafe_destructive_tool'
+  | 'tool_overlap'
+  | 'catch_all_tool'
+  | 'generic_tool_name'
+  | 'weak_required_input'
+  | 'too_many_required_inputs'
+  | 'score_regression'
+  | 'new_low_scoring_tool'
+  | 'new_tool_without_description'
+  | 'new_destructive_tool_without_safety'
+
+export interface AuditFinding {
+  id: AuditFindingId
+  severity: AuditSeverity
+  message: string
+  tool?: string
+  scoreImpact?: number
+  recommendation?: string
+}
+
+export interface AuditPolicy {
+  profile: AuditProfileName
+  descriptionStyle: 'concise' | 'structured'
+  failOn: AuditFindingId[]
+  thresholds: {
+    minAverageScore: number
+    maxScoreDrop: number
+    minToolScore: number
+  }
+  rules: {
+    requireDescriptions: boolean
+    requireUseWhen: boolean
+    requireSafetyForDestructive: boolean
+    requireSafetyForWrite: boolean
+    flagCatchAllTools: boolean
+    flagToolOverlap: AuditSeverity | 'off'
+    allowReadOnlyWithoutSafety: boolean
+  }
+}
+
 export interface ToolAudit {
   name: string
   description: string
@@ -38,6 +89,7 @@ export interface ToolAudit {
   errorRate: number
   requiredInputCount: number
   priorityHint?: number
+  findings: AuditFinding[]
   issues: string[]
   recommendations: string[]
 }
@@ -113,9 +165,32 @@ export interface FunnelFinding {
   finding: string
 }
 
+export interface AuditBaselineComparison {
+  averageScoreBefore: number
+  averageScoreAfter: number
+  scoreDelta: number
+  newTools: string[]
+  removedTools: string[]
+  regressedTools: Array<{
+    name: string
+    before: number
+    after: number
+    delta: number
+  }>
+  newFailingFindings: AuditFinding[]
+}
+
+export interface AuditCiVerdict {
+  status: 'pass' | 'fail'
+  info: number
+  warn: number
+  fail: number
+}
+
 export interface ActivationAuditReport {
   summary: {
     toolCount: number
+    averageScore: number
     /** Tools shown in the default surface (core profile minus contextual helpers). */
     recommendedToolCount: number
     /** All non-admin tools (default-visible + contextual helpers). */
@@ -137,6 +212,10 @@ export interface ActivationAuditReport {
     workflowCount?: number
     topRecommendation: string
   }
+  policy: AuditPolicy
+  ci: AuditCiVerdict
+  baseline?: AuditBaselineComparison
+  findings: AuditFinding[]
   tools: ToolAudit[]
   workflows: WorkflowAudit[]
   profiles: ProfileRecommendation[]

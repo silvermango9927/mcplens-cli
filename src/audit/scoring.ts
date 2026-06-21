@@ -1,5 +1,9 @@
 import {
   AuditLogEvent,
+  AuditFinding,
+  AuditFindingId,
+  AuditPolicy,
+  AuditSeverity,
   FunnelFinding,
   McpTool,
   MissedPrompt,
@@ -8,6 +12,7 @@ import {
   ToolRole,
   WorkflowAudit
 } from './schema.js'
+import { resolveAuditPolicy, severityForFinding } from './config.js'
 
 export interface UsageSummary {
   callCounts: Map<string, number>
@@ -23,11 +28,11 @@ export interface UsageSummary {
   funnelFindings: FunnelFinding[]
 }
 
-export function auditTools(tools: McpTool[], logs: AuditLogEvent[], missedPrompts: MissedPrompt[]): ToolAudit[] {
+export function auditTools(tools: McpTool[], logs: AuditLogEvent[], missedPrompts: MissedPrompt[], policy = resolveAuditPolicy({})): ToolAudit[] {
   const usage = summarizeUsage(logs)
   const promptExpected = new Set(missedPrompts.flatMap((prompt) => prompt.expectedTools))
-  const audits = tools.map((tool) => scoreTool(tool, usage, promptExpected))
-  applyOverlapFindings(tools, audits)
+  const audits = tools.map((tool) => scoreTool(tool, usage, promptExpected, policy))
+  applyOverlapFindings(tools, audits, policy)
   return audits.sort((a, b) => a.name.localeCompare(b.name))
 }
 
@@ -170,7 +175,7 @@ export function classifyRole(name: string, annotations?: Record<string, unknown>
   const first = tokens[0] ?? ''
   if (first === 'confirm') return 'confirm'
   if (first === 'reject') return 'reject'
-  if (tokens.some((t) => ['delete', 'remove', 'unlink'].includes(t))) return 'destructive'
+  if (tokens.some((t) => ['delete', 'remove', 'unlink', 'destroy', 'drop', 'purge', 'truncate'].includes(t))) return 'destructive'
   if (tokens.some((t) => ['compress', 'compression', 'admin', 'maintenance', 'candidate', 'relation', 'relations'].includes(t))) return 'admin'
   if (['search', 'get', 'list', 'read', 'find'].includes(first)) return 'read'
   if (['report', 'vote', 'mark'].includes(first) || tokens.some((t) => ['useful', 'usage', 'feedback'].includes(t))) return 'feedback'
@@ -201,9 +206,9 @@ export function workflowName(toolName: string): string {
   return dropWorkflowRolePrefix(tokens).join('_') || toolName
 }
 
-function scoreTool(tool: McpTool, usage: UsageSummary, promptExpected: Set<string>): ToolAudit {
+function scoreTool(tool: McpTool, usage: UsageSummary, promptExpected: Set<string>, policy: AuditPolicy): ToolAudit {
   const role = classifyRole(tool.name, tool.annotations)
-  const issues: string[] = []
+  const findings: AuditFinding[] = []
   const recommendations: string[] = []
   let score = 100
   const description = tool.description.trim()
@@ -213,55 +218,107 @@ function scoreTool(tool: McpTool, usage: UsageSummary, promptExpected: Set<strin
   const callCount = usage.callCounts.get(tool.name) ?? 0
   const errorCount = usage.errorCounts.get(tool.name) ?? 0
   const errorRate = callCount > 0 ? roundPercent(errorCount / callCount) : 0
+  const addFinding = (
+    id: AuditFindingId,
+    message: string,
+    scoreImpact: number,
+    fallbackSeverity: AuditSeverity = 'warn',
+    recommendation?: string
+  ): void => {
+    findings.push({
+      id,
+      severity: severityForFinding(policy, id, fallbackSeverity),
+      message,
+      tool: tool.name,
+      scoreImpact,
+      recommendation
+    })
+    score += scoreImpact
+  }
 
   if (nameTokens.length <= 1 && nameTokens.some((token) => GENERIC_NAMES.has(token))) {
-    score -= 18
-    issues.push('Tool name is generic and does not name the job or domain object.')
+    addFinding('generic_tool_name', 'Tool name is generic and does not name the job or domain object.', -18)
   }
   if (GENERIC_NAMES.has(nameTokens[0] ?? '')) {
     score -= 8
     recommendations.push('Prefer a verb plus concrete domain object in the name.')
   }
-  if (!/(^|\b)(use when|when to use|call this|call it when)\b/i.test(description)) {
-    score -= 14
-    issues.push('Description lacks explicit "Use when" trigger language.')
+  if (policy.rules.flagCatchAllTools && isCatchAllTool(tool, nameTokens)) {
+    addFinding(
+      'catch_all_tool',
+      'Catch-all execution tool needs a narrow threat model, clear scope, and guardrail wording.',
+      -16,
+      'warn',
+      'Document exactly when agents should use this broad execution surface and what it must not touch.'
+    )
   }
-  if (description.length < 20) {
-    score -= 16
-    issues.push('Description is too short for reliable model selection.')
+  if (description.length === 0 && policy.rules.requireDescriptions) {
+    addFinding('missing_description', 'Tool is missing a top-level MCP description.', -24, 'warn', 'Add a concise user-intent description.')
   }
-  if (description.length > 300) {
-    score -= 8
-    issues.push('Description is long enough to create tool-list noise.')
+  if (description.length > 0 && policy.rules.requireUseWhen && !/(^|\b)(use when|when to use|call this|call it when)\b/i.test(description)) {
+    addFinding(
+      'missing_trigger_language',
+      'Description lacks explicit "Use when" trigger language.',
+      -14,
+      'warn',
+      'Add a short trigger phrase when this policy requires structured descriptions.'
+    )
+  }
+  if (description.length > 0 && description.length < 20) {
+    addFinding('description_too_short', 'Description is too short for reliable model selection.', -16)
+  }
+  const maxDescriptionLength = policy.descriptionStyle === 'concise' ? 240 : 300
+  if (description.length > maxDescriptionLength) {
+    addFinding('description_too_long', 'Description is long enough to create tool-list noise.', -8, 'info')
   }
   if (/(api endpoint|database|crud|submit an item|execute|invoke)/i.test(description)) {
-    score -= 8
-    issues.push('Description is implementation-oriented instead of user-intent-oriented.')
+    addFinding(
+      'implementation_oriented_description',
+      'Description is implementation-oriented instead of user-intent-oriented.',
+      -8,
+      'info'
+    )
   }
   if (required.length > 4) {
-    score -= Math.min(20, (required.length - 4) * 4)
-    issues.push('Tool has many required inputs.')
+    addFinding('too_many_required_inputs', 'Tool has many required inputs.', -Math.min(20, (required.length - 4) * 4), 'warn')
   }
   const weakRequired = required.filter((name) => weakPropertyDescription(props.get(name)))
   if (weakRequired.length > 0) {
-    score -= Math.min(18, weakRequired.length * 5)
-    issues.push(`Required inputs need clearer descriptions or examples: ${weakRequired.join(', ')}.`)
+    addFinding(
+      'weak_required_input',
+      `Required inputs need clearer descriptions or examples: ${weakRequired.join(', ')}.`,
+      -Math.min(18, weakRequired.length * 5),
+      'warn'
+    )
   }
-  if ((role === 'write' || role === 'preview' || role === 'destructive') && !/(confirm|review|draft|safe|redact|does not publish|explicit)/i.test(description)) {
-    score -= 14
-    issues.push('Write-like tool lacks safety, draft, redaction, or explicit-confirmation wording.')
+  if (role === 'destructive' && policy.rules.requireSafetyForDestructive && !hasSafetyWording(description)) {
+    addFinding(
+      'unsafe_destructive_tool',
+      'Destructive tool lacks explicit confirmation, safety, or review wording.',
+      -18,
+      'warn',
+      'State the required confirmation or safety path before data is deleted, removed, or purged.'
+    )
+  } else if ((role === 'write' || role === 'preview') && policy.rules.requireSafetyForWrite && !hasSafetyWording(description)) {
+    addFinding(
+      'unsafe_write_tool',
+      'Write-like tool lacks safety, draft, redaction, or explicit-confirmation wording.',
+      -14,
+      'warn',
+      'Clarify whether this writes immediately or creates a draft/reviewable change.'
+    )
   }
   if (errorRate >= 25) {
     score -= 15
-    issues.push(`Observed error rate is high (${errorRate}%).`)
+    recommendations.push(`Observed error rate is high (${errorRate}%).`)
   }
   if (callCount === 0 && promptExpected.has(tool.name)) {
     score -= 15
-    issues.push('Tool has zero observed calls despite being expected in missed prompts.')
+    recommendations.push('Tool has zero observed calls despite being expected in missed prompts.')
   }
   if ((nameTokens.includes('post') || nameTokens.includes('publish') || nameTokens.includes('submit')) && !/(draft|confirm|review|does not publish)/i.test(description)) {
     score -= 12
-    issues.push('Contribution/public-posting tool sounds like immediate publication instead of a safe draft-confirm flow.')
+    recommendations.push('Contribution/public-posting tool sounds like immediate publication instead of a safe draft-confirm flow.')
   }
   if (role === 'confirm' || role === 'reject') {
     recommendations.push('Keep for safety, but consider contextual exposure only when there is a pending action.')
@@ -281,12 +338,14 @@ function scoreTool(tool: McpTool, usage: UsageSummary, promptExpected: Set<strin
     errorRate,
     requiredInputCount: required.length,
     priorityHint: priorityHint(tool),
-    issues,
+    findings,
+    issues: findings.map((finding) => finding.message),
     recommendations
   }
 }
 
-function applyOverlapFindings(tools: McpTool[], audits: ToolAudit[]): void {
+function applyOverlapFindings(tools: McpTool[], audits: ToolAudit[], policy: AuditPolicy): void {
+  if (policy.rules.flagToolOverlap === 'off') return
   const byName = new Map(audits.map((audit) => [audit.name, audit]))
   for (let i = 0; i < tools.length; i += 1) {
     for (let j = i + 1; j < tools.length; j += 1) {
@@ -294,12 +353,24 @@ function applyOverlapFindings(tools: McpTool[], audits: ToolAudit[]): void {
       if (score < 0.55) continue
       const left = byName.get(tools[i].name)
       const right = byName.get(tools[j].name)
-      left?.issues.push(`Overlaps heavily with ${tools[j].name}.`)
-      right?.issues.push(`Overlaps heavily with ${tools[i].name}.`)
-      if (left) left.discoverabilityScore = Math.max(0, left.discoverabilityScore - 8)
-      if (right) right.discoverabilityScore = Math.max(0, right.discoverabilityScore - 8)
+      if (left) addOverlapFinding(left, tools[j].name, policy)
+      if (right) addOverlapFinding(right, tools[i].name, policy)
     }
   }
+}
+
+function addOverlapFinding(audit: ToolAudit, otherTool: string, policy: AuditPolicy): void {
+  const finding: AuditFinding = {
+    id: 'tool_overlap',
+    severity: severityForFinding(policy, 'tool_overlap', 'warn'),
+    message: `Overlaps heavily with ${otherTool}.`,
+    tool: audit.name,
+    scoreImpact: -8,
+    recommendation: 'Rename, merge, or clarify the tools so model selection has a single obvious target.'
+  }
+  audit.findings.push(finding)
+  audit.issues.push(finding.message)
+  audit.discoverabilityScore = Math.max(0, audit.discoverabilityScore - 8)
 }
 
 function workflowRecommendation(name: string, audits: ToolAudit[], helperToolCount: number): string {
@@ -333,6 +404,18 @@ function weakPropertyDescription(property: Record<string, unknown> | undefined):
 function priorityHint(tool: McpTool): number | undefined {
   const value = tool.annotations?.priorityHint ?? tool._meta?.priorityHint ?? tool.annotations?.['priority_hint'] ?? tool._meta?.['priority_hint']
   return typeof value === 'number' ? value : undefined
+}
+
+function hasSafetyWording(description: string): boolean {
+  return /(confirm|review|draft|safe|redact|does not publish|explicit|undo|irreversible|destructive|permission)/i.test(description)
+}
+
+function isCatchAllTool(tool: McpTool, nameTokens: string[]): boolean {
+  const haystack = `${tool.name} ${tool.description}`.toLowerCase()
+  if (nameTokens.includes('eval') || nameTokens.includes('shell')) return true
+  if (nameTokens.includes('execute') && (nameTokens.includes('js') || nameTokens.includes('javascript') || nameTokens.includes('code'))) return true
+  if (nameTokens.includes('run') && (nameTokens.includes('code') || nameTokens.includes('command') || nameTokens.includes('script'))) return true
+  return /\b(execute arbitrary|run arbitrary|shell command|javascript|eval|python code|sql query)\b/.test(haystack)
 }
 
 function dropWorkflowRolePrefix(tokens: string[]): string[] {

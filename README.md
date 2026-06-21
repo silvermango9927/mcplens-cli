@@ -27,9 +27,12 @@ Common audit inputs:
 - `--tools-list <path>`: an MCP `tools/list` response or a bare tool array. Required.
 - `--logs <path>`: JSONL file of MCP/session events. Optional.
 - `--missed-prompts <path>`: JSON or JSONL prompts where a tool should have fired. Optional.
+- `--config <path>`: `mcplens.config.json` policy file for profiles, severities, and thresholds. Optional.
+- `--baseline <path>`: previous audit JSON for regression comparison. Optional.
 - `--out <path>`: Markdown report output. Without it, the report prints to stdout.
 - `--json <path>`: machine-readable audit report.
 - `--capabilities <path>`: machine-readable capability recommendations.
+- `--ci`: print a concise CI summary and return nonzero when configured failure rules trigger.
 
 ## Privacy
 
@@ -68,6 +71,9 @@ npx mcplens-cli audit-mcp \
   --json activation-report.json \
   --capabilities mcp-capabilities.json
 ```
+
+For CI usage with `mcplens.config.json`, severities, baseline regression checks, and a
+GitHub Actions example, see [docs/audit-mcp-ci.md](docs/audit-mcp-ci.md).
 
 ## Install
 
