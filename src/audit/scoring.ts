@@ -162,7 +162,10 @@ export function analyzeMissedPrompts(tools: McpTool[], prompts: MissedPrompt[]):
   })
 }
 
-export function classifyRole(name: string): ToolRole {
+export function classifyRole(name: string, annotations?: Record<string, unknown>): ToolRole {
+  if (annotations?.destructiveHint === true) return 'destructive'
+  if (annotations?.readOnlyHint === true) return 'read'
+
   const tokens = tokenizeName(name)
   const first = tokens[0] ?? ''
   if (first === 'confirm') return 'confirm'
@@ -199,7 +202,7 @@ export function workflowName(toolName: string): string {
 }
 
 function scoreTool(tool: McpTool, usage: UsageSummary, promptExpected: Set<string>): ToolAudit {
-  const role = classifyRole(tool.name)
+  const role = classifyRole(tool.name, tool.annotations)
   const issues: string[] = []
   const recommendations: string[] = []
   let score = 100

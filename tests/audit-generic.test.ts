@@ -3,6 +3,7 @@ import { buildAuditCapabilities } from '../src/audit/capabilities.js'
 import { loadToolsList } from '../src/audit/loaders.js'
 import { buildAuditReport } from '../src/audit/recommend.js'
 import { renderMarkdownReport } from '../src/audit/report.js'
+import { classifyRole } from '../src/audit/scoring.js'
 
 // The audit engine must work on ANY MCP server, not just the "shared learnings" example.
 // This fixture is a GitHub-style devtools server with no learnings/contribution concepts.
@@ -16,6 +17,8 @@ describe('audit works on a generic (non-learnings) MCP server', () => {
     expect(byName.get('search_code')?.role).toBe('read')
     expect(byName.get('delete_branch')?.role).toBe('destructive')
     expect(byName.get('create_issue')?.role).toBe('write')
+    expect(classifyRole('git_status', { readOnlyHint: true })).toBe('read')
+    expect(classifyRole('git_reset', { destructiveHint: true })).toBe('destructive')
     // Description quality scoring is domain-independent: a "Use when" tool beats a bare one.
     expect(byName.get('search_code')?.discoverabilityScore).toBeGreaterThan(
       byName.get('create_issue')?.discoverabilityScore ?? 100
