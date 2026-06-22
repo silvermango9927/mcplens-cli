@@ -372,6 +372,21 @@ The optional `--capabilities` file contains machine-readable recommendations for
 core/admin profiles, rewritten capability names and descriptions, priority hints, and
 contextual exposure guidance for helper tools such as `confirm_*` and `reject_*`.
 
+For CI, prefer warn-only mode so the audit nudges maintainers to review concrete tool
+descriptions without blocking urgent deployments:
+
+```sh
+npx mcplens-cli audit-mcp \
+  --tools-list path/to/tools-list.json \
+  --out activation-report.md \
+  --json activation-report.json \
+  --ci \
+  --warn-only
+```
+
+Use strict `--ci` without `--warn-only` only when you explicitly want configured fail
+findings to return a nonzero exit code.
+
 ---
 
 ## End-to-end example (copy-paste)

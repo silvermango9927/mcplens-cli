@@ -37,8 +37,18 @@ describe('MCP activation audit report', () => {
 
     const markdown = renderMarkdownReport(report)
     expect(markdown).toContain('# MCP Activation Audit')
+    expect(markdown).toContain('## Review These Tool Descriptions')
+    expect(markdown).toContain('## Actionable Tool Findings')
+    expect(markdown).toContain('## Recommended Description Format')
     expect(markdown).toContain('## Privacy/Safety Friction Review')
     expect(markdown).toContain('draft_public_solution')
+    expect(markdown).toContain('Suggested rewrite:')
+    expect(markdown).toContain('Use when:')
+    expect(markdown).toContain('Returns:')
+    expect(markdown).toContain('Do not use when:')
+    expect(markdown).toContain('Safety:')
+    expect(markdown.indexOf('## Actionable Tool Findings')).toBeLessThan(markdown.indexOf('Average discoverability score'))
+    expect(markdown.indexOf('Suggested rewrite:')).toBeLessThan(markdown.indexOf('Average discoverability score'))
     // Fix 3(a): advisory priority must be framed as a non-standard hint, not a real annotation.
     expect(markdown).toContain('advisory priority (non-standard MCP hint')
 

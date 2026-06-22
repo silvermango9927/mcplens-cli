@@ -1,8 +1,9 @@
 # MCP Tool Surface CI
 
-`audit-mcp` can run as a local CI regression check for MCP `tools/list` exports. It
-supports configurable policies, severities, and baseline comparison while still writing
-the normal Markdown and JSON audit artifacts.
+`audit-mcp` can run as a local CI regression check for MCP `tools/list` exports. The
+recommended CI setup is advisory: warn loudly, upload the Markdown/JSON artifacts, and
+let urgent deploys continue. Strict/failing CI remains available when a team explicitly
+wants tool-surface findings to block a job.
 
 ## Command
 
@@ -14,11 +15,27 @@ npx mcplens-cli audit-mcp \
   --out mcplens-report.md \
   --json mcplens-report.json \
   --capabilities capabilities.json \
+  --ci \
+  --warn-only
+```
+
+With `--ci --warn-only`, the command prints CI warnings but exits `0` even when the
+effective policy produces `fail` findings. It always writes the requested report
+artifacts first.
+
+For strict CI, omit `--warn-only`:
+
+```sh
+npx mcplens-cli audit-mcp \
+  --tools-list tools.json \
+  --config mcplens.config.json \
+  --baseline mcplens-baseline.json \
+  --out mcplens-report.md \
+  --json mcplens-report.json \
   --ci
 ```
 
-With `--ci`, the command exits `1` only when the effective policy produces one or more
-`fail` findings. It always writes the requested report artifacts first.
+Strict mode exits `1` when the effective policy produces one or more `fail` findings.
 
 ## Config
 
@@ -96,7 +113,8 @@ jobs:
             --baseline mcplens-baseline.json \
             --out mcplens-report.md \
             --json mcplens-report.json \
-            --ci
+            --ci \
+            --warn-only
 
       - name: Upload report
         if: always()

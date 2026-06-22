@@ -196,26 +196,30 @@ function recommendedName(tool: ToolAudit): string {
 function recommendedDescription(tool: ToolAudit): string {
   const name = recommendedName(tool)
   if (name === 'search_reusable_solutions') {
-    return 'Use when: the user is blocked by a setup, runtime, package, configuration, or integration problem and you need to search previously shared fixes before answering from memory. Returns: concise matching solutions and context. Do not use for: unrelated browsing or private incident data.'
+    return 'Use when: the user is blocked by a setup, runtime, package, configuration, or integration problem and you need to search previously shared fixes before answering from memory.\nReturns: concise matching solutions and context.\nDo not use when: the user needs unrelated browsing, private incident lookup, or a source-of-truth query outside this solution store.\nSafety: read-only lookup; do not include secrets, private URLs, or incident-specific data in the search query.'
   }
   if (name === 'draft_public_solution') {
-    return 'Use when: you have just helped the user solve a generic, reusable technical problem such as a package bug, setup failure, configuration issue, or integration workaround. Create a redacted public-safe draft that removes secrets, personal data, company/customer names, private URLs, and incident-specific details. This tool does not publish anything. Returns: a proposed public post for user review.'
+    return 'Use when: you have just helped the user solve a generic, reusable technical problem such as a package bug, setup failure, configuration issue, or integration workaround.\nReturns: a redacted public-safe draft for user review; this tool does not publish anything.\nDo not use when: the solution is customer-specific, incident-specific, private, speculative, or not useful to other developers.\nSafety: remove secrets, personal data, company/customer names, private URLs, and incident-specific details before drafting.'
   }
   if (name === 'publish_confirmed_solution') {
-    return 'Use when: the user has reviewed a generated public-safe draft and explicitly confirmed they want to publish it publicly under the service terms. Never call this directly after solving a problem; call the draft tool first. Returns: the public solution record.'
+    return 'Use when: the user has reviewed a generated public-safe draft and explicitly confirmed they want to publish it publicly under the service terms.\nReturns: the public solution record.\nDo not use when: no draft exists, the user has not explicitly confirmed publication, or the content still contains private details.\nSafety: publishes publicly; only call after the draft step and explicit user confirmation.'
   }
   if (tool.role === 'confirm') {
-    return `Use when: a pending ${tool.workflow} action has already been shown to the user and the user explicitly confirmed it. Returns: the confirmed result. Do not use for: starting a new workflow.`
+    return `Use when: a pending ${tool.workflow} action has already been shown to the user and the user explicitly confirmed it.\nReturns: the confirmed result.\nDo not use when: starting a new workflow, guessing user intent, or bypassing a preview/draft step.\nSafety: confirmation helper; expose contextually only after there is a pending action.`
   }
   if (tool.role === 'reject') {
-    return `Use when: a pending ${tool.workflow} action has been shown and the user rejects it or asks to discard it. Returns: the canceled pending action. Do not use for: starting a new workflow.`
+    return `Use when: a pending ${tool.workflow} action has been shown and the user rejects it or asks to discard it.\nReturns: the canceled pending action.\nDo not use when: starting a new workflow or silently canceling an action without user intent.\nSafety: rejection helper; expose contextually only after there is a pending action.`
   }
   if (tool.role === 'admin' || tool.role === 'destructive') {
-    return `Use when: an administrator intentionally needs ${tool.workflow} maintenance. Returns: the maintenance result. Do not expose in the default user-facing profile.`
+    return `Use when: an administrator intentionally needs ${tool.workflow} maintenance.\nReturns: the maintenance result.\nDo not use when: serving ordinary user workflows or when a read-only inspection tool would be enough.\nSafety: admin/destructive capability; keep out of the default user-facing profile and require explicit operator intent.`
   }
-  return tool.description.startsWith('Use when:')
+  return hasRecommendedDescriptionSections(tool.description)
     ? tool.description
-    : `Use when: the user needs the ${tool.workflow.replace(/_/g, ' ')} workflow. Returns: the relevant result. Do not use for: unrelated tasks.`
+    : `Use when: the user needs the ${tool.workflow.replace(/_/g, ' ')} workflow.\nReturns: the relevant result.\nDo not use when: the task belongs to another workflow or no tool call is needed.\nSafety: document whether this tool is read-only, writes data, calls external systems, or requires confirmation.`
+}
+
+function hasRecommendedDescriptionSections(description: string): boolean {
+  return ['Use when:', 'Returns:', 'Do not use when:', 'Safety:'].every((section) => description.includes(section))
 }
 
 function recommendedPriority(tool: ToolAudit): number {

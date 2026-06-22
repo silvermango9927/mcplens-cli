@@ -33,6 +33,7 @@ Common audit inputs:
 - `--json <path>`: machine-readable audit report.
 - `--capabilities <path>`: machine-readable capability recommendations.
 - `--ci`: print a concise CI summary and return nonzero when configured failure rules trigger.
+- `--warn-only`: advisory CI mode; print warnings and return `0` even when findings exist.
 
 ## Privacy
 
@@ -72,8 +73,16 @@ npx mcplens-cli audit-mcp \
   --capabilities mcp-capabilities.json
 ```
 
-For CI usage with `mcplens.config.json`, severities, baseline regression checks, and a
-GitHub Actions example, see [docs/audit-mcp-ci.md](docs/audit-mcp-ci.md).
+For CI, prefer advisory mode so tool-description quality nudges review without blocking
+urgent deploys:
+
+```sh
+npx mcplens-cli audit-mcp --tools-list tools.json --out report.md --json report.json --ci --warn-only
+```
+
+Strict CI is still available for teams that explicitly want findings to fail the job:
+use `--ci` without `--warn-only`. For `mcplens.config.json`, severities, baseline
+regression checks, and a GitHub Actions example, see [docs/audit-mcp-ci.md](docs/audit-mcp-ci.md).
 
 ## Install
 
