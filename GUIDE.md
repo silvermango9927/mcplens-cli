@@ -366,14 +366,17 @@ npx mcplens-cli audit-mcp \
   --offline
 ```
 
-The Markdown and JSON reports explain activation friction, workflow fanout, weak tool
-descriptions, profile recommendations, and contribution-funnel instrumentation to add.
+The Markdown and JSON reports explain tool-surface drift: overlap, missing flow
+boundaries, primary vs follow-up tool confusion, weak descriptions, profile
+recommendations, and instrumentation to prove whether the fix improves agent behavior.
 The optional `--capabilities` file contains machine-readable recommendations for
 core/admin profiles, rewritten capability names and descriptions, priority hints, and
 contextual exposure guidance for helper tools such as `confirm_*` and `reject_*`.
+The Markdown report also includes an implementation-plan section that can be fed to
+Cursor, Claude, or another coding agent.
 
-For CI, prefer warn-only mode so the audit nudges maintainers to review concrete tool
-descriptions without blocking urgent deployments:
+For CI, prefer warn-only mode so the audit prevents tool-surface regressions with an
+advisory PR comment without blocking urgent deployments:
 
 ```sh
 npx mcplens-cli audit-mcp \

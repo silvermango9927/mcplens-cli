@@ -1,9 +1,12 @@
 # MCP Tool Surface CI
 
-`audit-mcp` can run as a local CI regression check for MCP `tools/list` exports. The
-recommended CI setup is advisory: warn loudly, upload the Markdown/JSON artifacts, and
-let urgent deploys continue. Strict/failing CI remains available when a team explicitly
-wants tool-surface findings to block a job.
+`audit-mcp` can run as a local CI regression check for MCP `tools/list` exports. Its
+main CI job is to prevent tool-surface drift: new overlap, unclear primary vs follow-up
+flows, wordier descriptions, missing safety wording, and score regressions that make
+agents less likely to call the right tool. The recommended CI setup is advisory: warn
+loudly, upload the Markdown/JSON artifacts, and let urgent deploys continue.
+Strict/failing CI remains available when a team explicitly wants tool-surface findings
+to block a job.
 
 ## Command
 
@@ -80,6 +83,27 @@ Stable finding IDs include `missing_description`, `unsafe_destructive_tool`,
 Pass a previous `--json` audit output as `--baseline`. The report compares average score,
 per-tool score changes, new and removed tools, new missing descriptions, new unsafe
 destructive tools, and threshold violations.
+
+Use the baseline as the PR guardrail for drift. A useful PR comment should answer:
+
+- Did this PR add overlapping tools or make existing tools compete for the same prompt?
+- Did it blur the flow between primary tools and after-action helpers such as confirm/reject?
+- Did descriptions get longer without adding clearer activation triggers?
+- Did the default-visible surface grow when a contextual or admin profile would be cleaner?
+
+Keep the check warn-only by default. Blocking CI is best reserved for teams that have
+already agreed which findings are release blockers.
+
+## Proof Metrics
+
+Teams are more likely to value the check when reports can show concrete agent-behavior
+improvements. Capture before/after metrics such as:
+
+- More sessions with at least one tool call.
+- Higher correct-tool selection on missed-prompt replays.
+- Fewer failed tool calls or retries.
+- Smaller `tools/list` payloads and lower first-tool-call latency.
+- Fewer review comments that guess how a new tool should fit into the surface.
 
 ## GitHub Actions
 

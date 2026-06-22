@@ -4,9 +4,9 @@ MCPLens helps MCP server builders see whether agents can actually discover and u
 right tools.
 
 The main command, `audit-mcp`, runs locally against an MCP `tools/list` export and
-optional usage logs. It writes a report that highlights low-discoverability tools,
-overlapping capabilities, profile boundaries, description improvements, and missing
-instrumentation.
+optional usage logs. It writes a report that helps prevent tool-surface drift: overlap
+between tools, unclear primary vs follow-up flows, bloated descriptions, weak profile
+boundaries, and missing instrumentation.
 
 MCPLens can also generate a lean TypeScript MCP server from an OpenAPI-backed REST API.
 That path is useful when you want to turn a large API surface into a smaller,
@@ -57,9 +57,10 @@ The audit report can identify:
 - Tools that are hard for agents to discover.
 - Tool descriptions that are vague or overlapping.
 - Confirm/reject fanout and related workflow friction.
-- Which tools look like `core`, `admin`, or contextual capabilities.
-- Safer naming and description rewrites.
-- Instrumentation events that would make future activation failures easier to debug.
+- Which tools should be primary, contextual follow-up helpers, or admin capabilities.
+- Shorter, more decisive naming and description rewrites.
+- An implementation-plan section that can be handed to Cursor, Claude, or another coding agent.
+- Proof metrics for case studies: more tool usage, better correct-tool selection, fewer failed attempts, token/time savings, and less guesswork when changing the tool surface.
 
 To emit structured artifacts alongside the Markdown report:
 
@@ -73,8 +74,8 @@ npx mcplens-cli audit-mcp \
   --capabilities mcp-capabilities.json
 ```
 
-For CI, prefer advisory mode so tool-description quality nudges review without blocking
-urgent deploys:
+For CI, prefer advisory mode so tool-surface drift gets a PR comment without blocking
+urgent deploys by default:
 
 ```sh
 npx mcplens-cli audit-mcp --tools-list tools.json --out report.md --json report.json --ci --warn-only

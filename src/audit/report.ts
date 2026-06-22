@@ -4,17 +4,29 @@ export function renderMarkdownReport(report: ActivationAuditReport): string {
   const lines: string[] = []
   lines.push('# MCP Activation Audit')
   lines.push('')
-
-  lines.push('## Review These Tool Descriptions')
-  lines.push('')
   lines.push(
-    'Start with the concrete tool descriptions below. The score is secondary metadata; the main goal is to make each tool easy for an agent to choose, skip, or handle safely.'
+    'Purpose: prevent tool-surface drift. As an MCP server grows, overlapping tools, wordier descriptions, and unclear follow-up flows make agents less likely to call the right tool.'
   )
   lines.push('')
+
+  lines.push('## Prevent Tool-Surface Drift')
+  lines.push('')
+  lines.push(
+    'Start by deciding the activation model, then rewrite the concrete tool descriptions below. The score is secondary metadata; the main goal is to make each tool easy for an agent to choose, skip, or handle safely.'
+  )
+  lines.push('')
+  for (const item of driftDiagnosis(report)) lines.push(`- ${item}`)
   lines.push(`- Review priority: ${report.summary.topRecommendation}`)
   lines.push(`- Tools needing description review: ${buildReviewItems(report).length} of ${report.summary.toolCount}`)
   lines.push(`- Findings to triage: ${report.ci.fail} fail, ${report.ci.warn} warn, ${report.ci.info} info`)
-  lines.push('- Preferred rewrite shape: `Use when` / `Returns` / `Do not use when` / `Safety`.')
+  lines.push('- Preferred rewrite shape: short, decisive `Use when` / `Returns` / `Do not use when` / `Safety`.')
+  lines.push('')
+
+  lines.push('## Implementation Plan For Cursor/Claude')
+  lines.push('')
+  lines.push('Feed this section to a coding agent as the concrete fix plan:')
+  lines.push('')
+  for (const item of implementationPlan(report)) lines.push(`- [ ] ${item}`)
   lines.push('')
 
   lines.push('## Actionable Tool Findings')
@@ -62,6 +74,8 @@ export function renderMarkdownReport(report: ActivationAuditReport): string {
 
   lines.push('## Rewritten Tool Descriptions')
   lines.push('')
+  lines.push('Keep these rewrites short and activation-oriented. Avoid implementation detail unless it helps the agent choose the correct tool.')
+  lines.push('')
   for (const tool of report.recommendedTools) {
     lines.push(`### ${tool.currentName} -> ${tool.recommendedName}`)
     lines.push(`Profile: ${tool.profile}; advisory priority (non-standard MCP hint, most clients ignore): ${tool.advisoryPriority}`)
@@ -78,6 +92,8 @@ export function renderMarkdownReport(report: ActivationAuditReport): string {
   lines.push('')
 
   lines.push('## Recommended Tool Set')
+  lines.push('')
+  lines.push('Use this activation model to keep primary tools from competing with after-action helpers:')
   lines.push('')
   const contextualNames = new Set(
     report.hiddenTools.filter((hidden) => hidden.preferredAction === 'contextual_exposure').map((hidden) => hidden.tool)
@@ -119,6 +135,7 @@ export function renderMarkdownReport(report: ActivationAuditReport): string {
   lines.push(`- Top recommendation: ${report.summary.topRecommendation}`)
   lines.push(`- CI status: ${report.ci.status.toUpperCase()}`)
   lines.push(`- CI findings: ${report.ci.fail} fail, ${report.ci.warn} warn, ${report.ci.info} info`)
+  lines.push('- Recommended CI posture: advisory PR comment or warn-only check by default; strict failure only for teams that explicitly want blocking policy.')
   lines.push('')
   if (report.ci.fail > 0) {
     lines.push('### Strict CI Failures')
@@ -149,6 +166,15 @@ export function renderMarkdownReport(report: ActivationAuditReport): string {
     }
     lines.push('')
   }
+
+  lines.push('## Proof To Collect Before Monetization')
+  lines.push('')
+  lines.push('- Tool usage: compare sessions with any tool call before and after the surface change.')
+  lines.push('- Correct-tool selection: replay missed prompts and track whether the expected tool becomes the top match.')
+  lines.push('- Failed attempts: compare `tools/call` errors and prompt retries after descriptions are shortened.')
+  lines.push('- Token/time savings: compare `tools/list` payload size, first-tool-call latency, and total turns to task completion.')
+  lines.push('- Change confidence: use PR baseline diffs to show which new or edited tools would have caused surface drift.')
+  lines.push('')
 
   lines.push('## Missed-Prompt Coverage Analysis')
   lines.push('')
@@ -217,6 +243,47 @@ export function renderMarkdownReport(report: ActivationAuditReport): string {
   lines.push('- `advisoryPriority` is not a standard MCP annotation and most clients ignore it; the main fix is a smaller default surface with clearer trigger language.')
 
   return `${lines.join('\n')}\n`
+}
+
+function driftDiagnosis(report: ActivationAuditReport): string[] {
+  const overlapCount = report.findings.filter((finding) => finding.id === 'tool_overlap').length
+  const helperCount = report.summary.confirmRejectToolCount ?? 0
+  const workflowCount = report.summary.workflowCount ?? report.workflows.length
+  const contextualCount = report.summary.contextualToolCount ?? 0
+  const adminCount = report.summary.adminProfileToolCount ?? 0
+  const items = [
+    `Surface shape: ${report.summary.toolCount} exposed tools collapse into ${workflowCount} workflow group${workflowCount === 1 ? '' : 's'}.`,
+    `Primary surface: ${report.summary.recommendedToolCount} default-visible tools; ${contextualCount} follow-up/helper tools; ${adminCount} admin/destructive tools.`,
+    `Overlap diagnosis: ${overlapCount === 0 ? 'no high-confidence overlapping pairs found' : `${overlapCount} overlapping tool findings need merge, rename, or sharper boundaries`}.`,
+    `Flow diagnosis: ${helperCount} confirm/reject helper tool${helperCount === 1 ? '' : 's'} should be exposed after a pending action exists, not as primary choices.`
+  ]
+  if (report.summary.activationRate !== undefined) {
+    items.push(`Observed activation: ${report.summary.activationRate}% of initialized sessions made a tool call.`)
+  } else {
+    items.push('Observed activation: not measured yet; add initialize and tools/call logs to prove whether the drift fix increases usage.')
+  }
+  return items
+}
+
+function implementationPlan(report: ActivationAuditReport): string[] {
+  const defaultTools = defaultVisibleToolNames(report)
+  const contextualTools = report.hiddenTools.filter((tool) => tool.preferredAction === 'contextual_exposure').map((tool) => tool.tool)
+  const adminTools = report.hiddenTools.filter((tool) => tool.preferredAction === 'admin_profile').map((tool) => tool.tool)
+  return [
+    'Export the current MCP tools/list and keep this report plus the JSON audit as the baseline for future PR checks.',
+    `Define the activation model: default-visible primary tools are ${formatList(defaultTools)}; contextual follow-up tools are ${formatList(contextualTools)}; admin/destructive tools are ${formatList(adminTools)}.`,
+    'Update server registration so contextual follow-up tools are only advertised after a pending action exists, or move them behind a separate admin/profile configuration if the client cannot do contextual exposure.',
+    'For every item in Actionable Tool Findings, apply the suggested name/description or an equivalent shorter rewrite with a decisive trigger, return shape, exclusion rule, and safety note.',
+    'Resolve each Merge/Hide/Split recommendation by merging overlapping capabilities, renaming tools that compete for the same prompt, or making the boundary explicit in `Do not use when` wording.',
+    'Add or update standard MCP ToolAnnotations (`readOnlyHint`, `destructiveHint`, `idempotentHint`, `openWorldHint`) so safety is machine-readable instead of buried in prose.',
+    'Wire warn-only CI on pull requests with a baseline audit so new tools, overlap, score regressions, and missing descriptions get an advisory PR comment before drift ships.',
+    'Instrument proof metrics: initialized sessions, tools/list payload bytes, tools/call success/error, missed-prompt replay results, first-tool-call latency, and task completion turns.'
+  ]
+}
+
+function defaultVisibleToolNames(report: ActivationAuditReport): string[] {
+  const hiddenNames = new Set(report.hiddenTools.map((tool) => tool.tool))
+  return report.profiles.find((profile) => profile.name === 'core')?.tools.filter((tool) => !hiddenNames.has(tool)) ?? []
 }
 
 function metricLine(label: string, value: number | undefined, suffix = ''): string {
