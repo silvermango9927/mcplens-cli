@@ -1,7 +1,7 @@
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { resolveAuditPolicy } from '../src/audit/config.js'
 import { loadToolsList } from '../src/audit/loaders.js'
 import { buildAuditReport } from '../src/audit/recommend.js'
@@ -95,7 +95,7 @@ describe('audit policy and CI behavior', () => {
       })
 
       expect(exitCode).toBe(1)
-      await expect(readFile(md, 'utf8')).resolves.toContain('## CI Verdict')
+      await expect(readFile(md, 'utf8')).resolves.toContain('## Secondary Summary And CI Metadata')
       const parsed = JSON.parse(await readFile(json, 'utf8')) as {
         ci: { status: string; fail: number }
         baseline: { scoreDelta: number; newTools: string[] }
@@ -105,6 +105,62 @@ describe('audit policy and CI behavior', () => {
       expect(parsed.baseline.scoreDelta).toBeLessThan(0)
       expect(parsed.baseline.newTools).toContain('delete_branch')
     } finally {
+      await rm(dir, { recursive: true, force: true })
+    }
+  })
+
+  it('returns success in warn-only CI mode while preserving fail findings in artifacts', async () => {
+    const dir = await mkdtemp(path.join(tmpdir(), 'mcplens-ci-warn-only-'))
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined)
+    try {
+      const config = path.join(dir, 'mcplens.config.json')
+      const baseline = path.join(dir, 'baseline.json')
+      const md = path.join(dir, 'report.md')
+      const json = path.join(dir, 'report.json')
+      await writeFile(
+        config,
+        JSON.stringify(
+          {
+            profile: 'production',
+            thresholds: { maxScoreDrop: 1, minToolScore: 50 }
+          },
+          null,
+          2
+        )
+      )
+      await writeFile(
+        baseline,
+        JSON.stringify(
+          {
+            summary: { averageScore: 100 },
+            tools: [{ name: 'search_code', description: 'old', discoverabilityScore: 100 }]
+          },
+          null,
+          2
+        )
+      )
+
+      const exitCode = await runAuditMcpCommand({
+        toolsList: 'tests/fixtures/generic-mcp/tools-list.json',
+        config,
+        baseline,
+        out: md,
+        json,
+        ci: true,
+        warnOnly: true,
+        offline: true
+      })
+
+      expect(exitCode).toBe(0)
+      const parsed = JSON.parse(await readFile(json, 'utf8')) as { ci: { status: string; fail: number } }
+      expect(parsed.ci.status).toBe('fail')
+      expect(parsed.ci.fail).toBeGreaterThan(0)
+      const output = logSpy.mock.calls.map((call) => call.join(' ')).join('\n')
+      expect(output).toContain('Mode: warn-only advisory')
+      expect(output).toContain('WARN-ONLY would fail')
+      await expect(readFile(md, 'utf8')).resolves.toContain('Strict CI Failures')
+    } finally {
+      logSpy.mockRestore()
       await rm(dir, { recursive: true, force: true })
     }
   })

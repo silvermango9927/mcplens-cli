@@ -17,6 +17,7 @@ export interface AuditMcpCommandOptions {
   capabilities?: string
   offline?: boolean
   ci?: boolean
+  warnOnly?: boolean
 }
 
 export async function runAuditMcpCommand(options: AuditMcpCommandOptions): Promise<number> {
@@ -59,14 +60,16 @@ export async function runAuditMcpCommand(options: AuditMcpCommandOptions): Promi
     process.stdout.write(markdown)
   }
 
-  if (options.ci) {
+  const ciMode = options.ci || options.warnOnly
+  if (ciMode) {
     printCiSummary(report, {
       markdownPath: options.out ? path.resolve(options.out) : undefined,
-      jsonPath: options.json ? path.resolve(options.json) : undefined
+      jsonPath: options.json ? path.resolve(options.json) : undefined,
+      warnOnly: options.warnOnly === true
     })
   }
 
-  return options.ci && report.ci.status === 'fail' ? 1 : 0
+  return ciMode && !options.warnOnly && report.ci.status === 'fail' ? 1 : 0
 }
 
 function printCiSummary(
@@ -74,17 +77,24 @@ function printCiSummary(
   paths: {
     markdownPath?: string
     jsonPath?: string
+    warnOnly: boolean
   }
 ): void {
   console.log('')
   console.log('mcplens audit-mcp CI summary')
+  console.log(`Mode: ${paths.warnOnly ? 'warn-only advisory (always exits 0)' : 'strict (exits 1 on fail findings)'}`)
   console.log(`Tools: ${report.summary.toolCount}`)
   const delta = report.baseline ? ` (${formatSignedNumber(report.baseline.scoreDelta)} from baseline)` : ''
   console.log(`Average score: ${report.summary.averageScore}${delta}`)
   console.log(`Findings: ${report.ci.info} info, ${report.ci.warn} warn, ${report.ci.fail} fail`)
   for (const finding of report.findings.filter((item) => item.severity === 'fail')) {
     console.log('')
-    console.log(`FAIL ${finding.id}${finding.tool ? ` ${finding.tool}` : ''}`)
+    console.log(`${paths.warnOnly ? 'WARN-ONLY would fail' : 'FAIL'} ${finding.id}${finding.tool ? ` ${finding.tool}` : ''}`)
+    console.log(finding.message)
+  }
+  for (const finding of report.findings.filter((item) => item.severity === 'warn')) {
+    console.log('')
+    console.log(`WARN ${finding.id}${finding.tool ? ` ${finding.tool}` : ''}`)
     console.log(finding.message)
   }
   if (paths.markdownPath) console.log(`\nReport: ${paths.markdownPath}`)

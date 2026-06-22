@@ -24,6 +24,7 @@ program
   .option('--json <path>', 'Machine-readable audit report output path')
   .option('--capabilities <path>', 'Machine-readable recommended MCP capability/profile plan output path')
   .option('--ci', 'Enable CI summary and return nonzero when configured fail findings exist')
+  .option('--warn-only', 'Run CI summary in advisory mode and exit 0 even when findings exist')
   .option('--offline', 'Run deterministic offline audit (currently the only mode)')
   .action(async (opts) => {
     const exitCode = await runAuditMcpCommand(opts)
