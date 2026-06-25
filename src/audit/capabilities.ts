@@ -9,6 +9,7 @@ import {
   ToolAudit,
   ToolRole
 } from './schema.js'
+import { isContributionSubmissionGate } from './workflow-risk.js'
 
 const INSTRUMENTATION_EVENTS = [
   'initialize',
@@ -44,6 +45,8 @@ export function buildAuditCapabilities(report: ActivationAuditReport): AuditMcpC
       adminToolCount: tools.filter((tool) => tool.profile === 'admin').length,
       defaultToolCount: tools.filter((tool) => tool.exposure === 'default').length,
       contextualToolCount: tools.filter((tool) => tool.exposure === 'contextual').length,
+      surfaceClutterFollowUpToolCount: tools.filter((tool) => tool.followUpKind === 'surface_clutter_reduction').length,
+      completionGateToolCount: tools.filter((tool) => tool.completionImpact === 'may_reduce_completion').length,
       manifestBytes: report.summary.manifestBytes
     },
     profiles,
@@ -51,7 +54,7 @@ export function buildAuditCapabilities(report: ActivationAuditReport): AuditMcpC
     instrumentationEvents: INSTRUMENTATION_EVENTS,
     notes: [
       'This file is a deterministic mcplens audit recommendation, not a live MCP protocol response.',
-      'The core profile is every non-admin tool; expose its contextual members (confirm/reject helpers) only after a pending action exists, and ship the rest as the default tools/list.',
+      'The core profile is every non-admin tool; expose low-risk contextual follow-up helpers only after a pending action exists, and treat contribution/submission gates as completion-risk steps to measure.',
       'Each tool\'s `annotations` are standard MCP ToolAnnotations (readOnlyHint, destructiveHint, idempotentHint, openWorldHint) — set these on your real tools so clients can reason about safety.',
       '`advisoryPriority` is NOT a standard MCP annotation and most clients ignore it. The reliable levers are a smaller default surface, clearer trigger language, and the standard annotations above.'
     ]
@@ -69,6 +72,8 @@ function capabilityTool(tool: ToolAudit, recommended: RecommendedTool | undefine
     role: tool.role,
     profile,
     exposure,
+    followUpKind: hidden?.followUpKind,
+    completionImpact: hidden?.completionImpact ?? (isContributionSubmissionGate(tool) ? 'may_reduce_completion' : undefined),
     annotations: standardAnnotations(tool.role),
     advisoryPriority: recommended?.advisoryPriority ?? tool.priorityHint ?? defaultPriorityForExposure(exposure),
     rationale: rationaleFor(tool, exposure, hidden)

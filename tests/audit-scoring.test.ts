@@ -26,6 +26,9 @@ describe('audit scoring', () => {
     const learning = workflows.find((workflow) => workflow.name === 'learning_contribution')
     expect(learning?.toolNames).toEqual(['confirm_learning', 'reject_learning', 'submit_learning'])
     expect(learning?.helperToolCount).toBe(2)
+    expect(learning?.completionGateToolCount).toBe(3)
+    expect(learning?.completionRisk).toBe('may_reduce_completion')
+    expect(learning?.warning).toContain('Extra confirmation/posting steps may reduce activation')
 
     const usage = summarizeUsage(logs)
     expect(usage.initializedSessions).toBe(3)

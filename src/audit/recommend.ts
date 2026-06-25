@@ -13,6 +13,7 @@ import {
 import { compareAuditBaseline } from './baseline.js'
 import { resolveAuditPolicy } from './config.js'
 import { analyzeMissedPrompts, auditTools, buildWorkflowAudits, summarizeUsage } from './scoring.js'
+import { CONTRIBUTION_GATE_WARNING, isContributionSubmissionGate } from './workflow-risk.js'
 
 export interface BuildAuditReportOptions {
   tools: McpTool[]
@@ -34,6 +35,7 @@ export function buildAuditReport(options: BuildAuditReportOptions): ActivationAu
   const mergedTools = buildMergeRecommendations(tools)
   const missedPromptFindings = analyzeMissedPrompts(options.tools, options.missedPrompts)
   const confirmRejectToolCount = tools.filter((tool) => tool.role === 'confirm' || tool.role === 'reject').length
+  const completionGateToolCount = tools.filter(isContributionSubmissionGate).length
   const baseline = options.baselineReport ? compareAuditBaseline(tools, options.baselineReport, policy) : undefined
   const findings = [...tools.flatMap((tool) => tool.findings), ...(baseline?.newFailingFindings ?? [])]
   const ci = buildCiVerdict(findings)
@@ -47,6 +49,7 @@ export function buildAuditReport(options: BuildAuditReportOptions): ActivationAu
   const adminProfileToolCount = profiles.find((profile) => profile.name === 'admin')?.tools.length ?? 0
   const defaultVisibleTools = coreProfileTools.filter((name) => !hiddenNames.has(name))
   const contextualToolCount = coreProfileTools.length - defaultVisibleTools.length
+  const surfaceClutterFollowUpToolCount = hiddenTools.filter((tool) => tool.followUpKind === 'surface_clutter_reduction').length
   const recommendedToolCount = defaultVisibleTools.length
 
   return {
@@ -57,6 +60,8 @@ export function buildAuditReport(options: BuildAuditReportOptions): ActivationAu
       coreProfileToolCount: coreProfileTools.length,
       adminProfileToolCount,
       contextualToolCount,
+      surfaceClutterFollowUpToolCount,
+      completionGateToolCount,
       initializedSessions: usage.initializedSessions,
       sessionsWithToolCall: usage.sessionsWithToolCall,
       activationRate: usage.activationRate,
@@ -140,10 +145,15 @@ function buildHiddenTools(tools: ToolAudit[]): HiddenToolRecommendation[] {
     .filter((tool) => tool.role === 'admin' || tool.role === 'destructive' || ((tool.role === 'confirm' || tool.role === 'reject') && tool.callCount === 0))
     .map((tool): HiddenToolRecommendation => {
       if (tool.role === 'confirm' || tool.role === 'reject') {
+        const completionGate = isContributionSubmissionGate(tool)
         return {
           tool: tool.name,
-          reason: 'Safety helper tools are useful after a pending action exists, but add noise in the default selection surface.',
-          preferredAction: 'contextual_exposure'
+          reason: completionGate
+            ? `Contribution/submission confirmation or posting gate should not compete in the default surface, but it can affect completion if agents do not continue the workflow. ${CONTRIBUTION_GATE_WARNING}`
+            : 'Follow-up helper tools are useful after a pending action exists and reduce default-surface clutter without changing the primary completion path.',
+          preferredAction: 'contextual_exposure',
+          followUpKind: completionGate ? 'completion_gate' : 'surface_clutter_reduction',
+          completionImpact: completionGate ? 'may_reduce_completion' : 'low'
         }
       }
       return {
@@ -175,9 +185,12 @@ function buildMergeRecommendations(tools: ToolAudit[]): MergeRecommendation[] {
   for (const [workflow, group] of byWorkflow) {
     const helpers = group.filter((tool) => tool.role === 'confirm' || tool.role === 'reject')
     if (helpers.length >= 2) {
+      const hasCompletionGate = group.some(isContributionSubmissionGate)
       recommendations.push({
         tools: group.map((tool) => tool.name).sort(),
-        reason: `${workflow} is split into preview/confirm/reject helpers. Preserve safety, but expose helpers contextually or behind a lower-priority profile.`
+        reason: hasCompletionGate
+          ? `${workflow} is split into draft/confirm/reject gates. Preserve safety, but treat this as a completion-risk funnel and measure whether agents reach the posting step.`
+          : `${workflow} is split into preview/confirm/reject helpers. Preserve safety, but expose helpers contextually or behind a lower-priority profile.`
       })
     }
   }
@@ -205,10 +218,18 @@ function recommendedDescription(tool: ToolAudit): string {
     return 'Use when: the user has reviewed a generated public-safe draft and explicitly confirmed they want to publish it publicly under the service terms.\nReturns: the public solution record.\nDo not use when: no draft exists, the user has not explicitly confirmed publication, or the content still contains private details.\nSafety: publishes publicly; only call after the draft step and explicit user confirmation.'
   }
   if (tool.role === 'confirm') {
-    return `Use when: a pending ${tool.workflow} action has already been shown to the user and the user explicitly confirmed it.\nReturns: the confirmed result.\nDo not use when: starting a new workflow, guessing user intent, or bypassing a preview/draft step.\nSafety: confirmation helper; expose contextually only after there is a pending action.`
+    const safety =
+      isContributionSubmissionGate(tool)
+        ? 'confirmation/posting gate; expose contextually after a pending draft exists and measure contribution completion.'
+        : 'confirmation helper; expose contextually only after there is a pending action.'
+    return `Use when: a pending ${tool.workflow} action has already been shown to the user and the user explicitly confirmed it.\nReturns: the confirmed result.\nDo not use when: starting a new workflow, guessing user intent, or bypassing a preview/draft step.\nSafety: ${safety}`
   }
   if (tool.role === 'reject') {
-    return `Use when: a pending ${tool.workflow} action has been shown and the user rejects it or asks to discard it.\nReturns: the canceled pending action.\nDo not use when: starting a new workflow or silently canceling an action without user intent.\nSafety: rejection helper; expose contextually only after there is a pending action.`
+    const safety =
+      isContributionSubmissionGate(tool)
+        ? 'rejection gate for a contribution/submission draft; expose contextually and measure draft-to-public-post completion.'
+        : 'rejection helper; expose contextually only after there is a pending action.'
+    return `Use when: a pending ${tool.workflow} action has been shown and the user rejects it or asks to discard it.\nReturns: the canceled pending action.\nDo not use when: starting a new workflow or silently canceling an action without user intent.\nSafety: ${safety}`
   }
   if (tool.role === 'admin' || tool.role === 'destructive') {
     return `Use when: an administrator intentionally needs ${tool.workflow} maintenance.\nReturns: the maintenance result.\nDo not use when: serving ordinary user workflows or when a read-only inspection tool would be enough.\nSafety: admin/destructive capability; keep out of the default user-facing profile and require explicit operator intent.`
