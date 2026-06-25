@@ -111,6 +111,9 @@ export interface WorkflowAudit {
   roles: ToolRole[]
   callCount: number
   helperToolCount: number
+  completionGateToolCount?: number
+  completionRisk?: 'low' | 'may_reduce_completion'
+  warning?: string
   recommendation: string
 }
 
@@ -145,6 +148,8 @@ export interface HiddenToolRecommendation {
   tool: string
   reason: string
   preferredAction: 'admin_profile' | 'contextual_exposure' | 'hide'
+  followUpKind?: 'surface_clutter_reduction' | 'completion_gate'
+  completionImpact?: 'low' | 'may_reduce_completion'
 }
 
 export interface MergeRecommendation {
@@ -199,6 +204,10 @@ export interface ActivationAuditReport {
     adminProfileToolCount?: number
     /** Confirm/reject helpers exposed only when a pending action exists. */
     contextualToolCount?: number
+    /** Contextual helpers that reduce default-surface clutter without expected completion harm. */
+    surfaceClutterFollowUpToolCount?: number
+    /** Contribution/submission draft, confirmation, or posting gates that should be measured for completion impact. */
+    completionGateToolCount?: number
     initializedSessions?: number
     sessionsWithToolCall?: number
     activationRate?: number
@@ -237,6 +246,8 @@ export interface CapabilityTool {
   role: ToolRole
   profile: 'core' | 'admin'
   exposure: CapabilityExposure
+  followUpKind?: 'surface_clutter_reduction' | 'completion_gate'
+  completionImpact?: 'low' | 'may_reduce_completion'
   /** Standard MCP ToolAnnotations to set on this tool (spec-compliant). */
   annotations: McpToolAnnotations
   /** Advisory ordering hint only; not a standard MCP annotation. Honored by few clients. */
@@ -259,6 +270,8 @@ export interface AuditMcpCapabilities {
     adminToolCount: number
     defaultToolCount: number
     contextualToolCount: number
+    surfaceClutterFollowUpToolCount?: number
+    completionGateToolCount?: number
     manifestBytes?: number
   }
   profiles: CapabilityProfile[]

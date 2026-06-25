@@ -1,4 +1,5 @@
 import { ActivationAuditReport } from './schema.js'
+import { CONTRIBUTION_GATE_WARNING } from './workflow-risk.js'
 
 export function renderMarkdownReport(report: ActivationAuditReport): string {
   const lines: string[] = []
@@ -89,6 +90,7 @@ export function renderMarkdownReport(report: ActivationAuditReport): string {
   for (const hidden of report.hiddenTools) lines.push(`- Hide or move \`${hidden.tool}\`: ${hidden.reason} Preferred action: ${hidden.preferredAction}.`)
   for (const merge of report.mergedTools) lines.push(`- ${merge.reason} Tools: ${merge.tools.map((tool) => `\`${tool}\``).join(', ')}.`)
   if (report.hiddenTools.length === 0 && report.mergedTools.length === 0) lines.push('- No high-confidence hide or merge recommendations.')
+  if (hasContributionCompletionGate(report)) lines.push(`- Warning: ${CONTRIBUTION_GATE_WARNING}`)
   lines.push('')
 
   lines.push('## Recommended Tool Set')
@@ -98,12 +100,19 @@ export function renderMarkdownReport(report: ActivationAuditReport): string {
   const contextualNames = new Set(
     report.hiddenTools.filter((hidden) => hidden.preferredAction === 'contextual_exposure').map((hidden) => hidden.tool)
   )
+  const completionGateNames = new Set(
+    report.hiddenTools.filter((hidden) => hidden.followUpKind === 'completion_gate').map((hidden) => hidden.tool)
+  )
   for (const profile of report.profiles) {
     lines.push(`### ${profile.name}`)
     lines.push(profile.rationale)
     lines.push('')
     for (const tool of profile.tools) {
-      const suffix = contextualNames.has(tool) ? ' - contextual (expose only when a pending action exists)' : ''
+      const suffix = completionGateNames.has(tool)
+        ? ' - contextual gate (may affect completion; measure continuation)'
+        : contextualNames.has(tool)
+          ? ' - contextual follow-up (reduces default-surface clutter)'
+          : ''
       lines.push(`- \`${tool}\`${suffix}`)
     }
     lines.push('')
@@ -119,6 +128,12 @@ export function renderMarkdownReport(report: ActivationAuditReport): string {
     lines.push(
       `- Core profile: ${report.summary.coreProfileToolCount} (${report.summary.recommendedToolCount} default-visible + ${report.summary.contextualToolCount ?? 0} contextual helpers)`
     )
+  }
+  if (report.summary.surfaceClutterFollowUpToolCount !== undefined) {
+    lines.push(`- Low-risk follow-up helpers: ${report.summary.surfaceClutterFollowUpToolCount}`)
+  }
+  if (report.summary.completionGateToolCount !== undefined) {
+    lines.push(`- Contribution/submission gates to measure: ${report.summary.completionGateToolCount}`)
   }
   if (report.summary.adminProfileToolCount !== undefined) {
     lines.push(`- Admin profile (kept out of the default surface): ${report.summary.adminProfileToolCount}`)
@@ -197,6 +212,7 @@ export function renderMarkdownReport(report: ActivationAuditReport): string {
   lines.push(metricLine('Confirmation shown events', report.summary.confirmationShownEvents))
   lines.push(metricLine('Public post events', report.summary.publicPostEvents))
   lines.push(metricLine('Contribution completion rate', report.summary.contributionCompletionRate, '%'))
+  if (hasContributionCompletionGate(report)) lines.push(`- Warning: ${CONTRIBUTION_GATE_WARNING}`)
   for (const finding of report.funnelFindings) lines.push(`- ${finding.stage}: ${finding.count ?? 'not measured'} - ${finding.finding}`)
   lines.push('')
 
@@ -251,11 +267,14 @@ function driftDiagnosis(report: ActivationAuditReport): string[] {
   const workflowCount = report.summary.workflowCount ?? report.workflows.length
   const contextualCount = report.summary.contextualToolCount ?? 0
   const adminCount = report.summary.adminProfileToolCount ?? 0
+  const lowRiskFollowUpCount = report.summary.surfaceClutterFollowUpToolCount ?? 0
+  const completionGateCount = report.summary.completionGateToolCount ?? 0
   const items = [
     `Surface shape: ${report.summary.toolCount} exposed tools collapse into ${workflowCount} workflow group${workflowCount === 1 ? '' : 's'}.`,
     `Primary surface: ${report.summary.recommendedToolCount} default-visible tools; ${contextualCount} follow-up/helper tools; ${adminCount} admin/destructive tools.`,
     `Overlap diagnosis: ${overlapCount === 0 ? 'no high-confidence overlapping pairs found' : `${overlapCount} overlapping tool findings need merge, rename, or sharper boundaries`}.`,
-    `Flow diagnosis: ${helperCount} confirm/reject helper tool${helperCount === 1 ? '' : 's'} should be exposed after a pending action exists, not as primary choices.`
+    `Flow diagnosis: ${helperCount} confirm/reject helper tool${helperCount === 1 ? '' : 's'} should be exposed after a pending action exists, not as primary choices.`,
+    `Follow-up distinction: ${lowRiskFollowUpCount} low-risk helper tool${lowRiskFollowUpCount === 1 ? '' : 's'} reduce default-surface clutter; ${completionGateCount} contribution/submission gate tool${completionGateCount === 1 ? '' : 's'} may reduce workflow completion.`
   ]
   if (report.summary.activationRate !== undefined) {
     items.push(`Observed activation: ${report.summary.activationRate}% of initialized sessions made a tool call.`)
@@ -267,12 +286,18 @@ function driftDiagnosis(report: ActivationAuditReport): string[] {
 
 function implementationPlan(report: ActivationAuditReport): string[] {
   const defaultTools = defaultVisibleToolNames(report)
-  const contextualTools = report.hiddenTools.filter((tool) => tool.preferredAction === 'contextual_exposure').map((tool) => tool.tool)
+  const contextualTools = report.hiddenTools
+    .filter((tool) => tool.preferredAction === 'contextual_exposure' && tool.followUpKind !== 'completion_gate')
+    .map((tool) => tool.tool)
+  const completionGateTools = report.hiddenTools.filter((tool) => tool.followUpKind === 'completion_gate').map((tool) => tool.tool)
   const adminTools = report.hiddenTools.filter((tool) => tool.preferredAction === 'admin_profile').map((tool) => tool.tool)
   return [
     'Export the current MCP tools/list and keep this report plus the JSON audit as the baseline for future PR checks.',
-    `Define the activation model: default-visible primary tools are ${formatList(defaultTools)}; contextual follow-up tools are ${formatList(contextualTools)}; admin/destructive tools are ${formatList(adminTools)}.`,
+    `Define the activation model: default-visible primary tools are ${formatList(defaultTools)}; low-risk contextual follow-up tools are ${formatList(contextualTools)}; contribution/submission gates are ${formatList(completionGateTools)}; admin/destructive tools are ${formatList(adminTools)}.`,
     'Update server registration so contextual follow-up tools are only advertised after a pending action exists, or move them behind a separate admin/profile configuration if the client cannot do contextual exposure.',
+    hasContributionCompletionGate(report)
+      ? `For contribution/submission workflows, keep necessary draft/confirmation/posting safety gates but track completion before adding more. ${CONTRIBUTION_GATE_WARNING}`
+      : 'For contribution/submission workflows, add draft/confirmation/posting completion metrics before introducing new safety gates.',
     'For every item in Actionable Tool Findings, apply the suggested name/description or an equivalent shorter rewrite with a decisive trigger, return shape, exclusion rule, and safety note.',
     'Resolve each Merge/Hide/Split recommendation by merging overlapping capabilities, renaming tools that compete for the same prompt, or making the boundary explicit in `Do not use when` wording.',
     'Add or update standard MCP ToolAnnotations (`readOnlyHint`, `destructiveHint`, `idempotentHint`, `openWorldHint`) so safety is machine-readable instead of buried in prose.',
@@ -284,6 +309,10 @@ function implementationPlan(report: ActivationAuditReport): string[] {
 function defaultVisibleToolNames(report: ActivationAuditReport): string[] {
   const hiddenNames = new Set(report.hiddenTools.map((tool) => tool.tool))
   return report.profiles.find((profile) => profile.name === 'core')?.tools.filter((tool) => !hiddenNames.has(tool)) ?? []
+}
+
+function hasContributionCompletionGate(report: ActivationAuditReport): boolean {
+  return (report.summary.completionGateToolCount ?? 0) > 0 || report.workflows.some((workflow) => workflow.completionRisk === 'may_reduce_completion')
 }
 
 function metricLine(label: string, value: number | undefined, suffix = ''): string {

@@ -32,8 +32,18 @@ describe('MCP activation audit report', () => {
     expect((report.summary.recommendedToolCount ?? 0) + (report.summary.contextualToolCount ?? 0)).toBe(
       report.summary.coreProfileToolCount
     )
+    expect(report.summary.surfaceClutterFollowUpToolCount).toBe(3)
+    expect(report.summary.completionGateToolCount).toBe(3)
     // Confirm/reject helpers live in the core profile (not admin), but are exposed contextually.
     expect(coreProfile?.tools).toContain('confirm_learning')
+    expect(report.hiddenTools.find((tool) => tool.tool === 'confirm_learning')).toMatchObject({
+      followUpKind: 'completion_gate',
+      completionImpact: 'may_reduce_completion'
+    })
+    expect(report.hiddenTools.find((tool) => tool.tool === 'confirm_compression')).toMatchObject({
+      followUpKind: 'surface_clutter_reduction',
+      completionImpact: 'low'
+    })
 
     const markdown = renderMarkdownReport(report)
     expect(markdown).toContain('# MCP Activation Audit')
@@ -58,18 +68,34 @@ describe('MCP activation audit report', () => {
     expect(markdown).toContain('advisory PR comment or warn-only check by default')
     // Fix 3(a): advisory priority must be framed as a non-standard hint, not a real annotation.
     expect(markdown).toContain('advisory priority (non-standard MCP hint')
+    expect(markdown).toContain('Follow-up distinction: 3 low-risk helper tools reduce default-surface clutter; 3 contribution/submission gate tools may reduce workflow completion.')
+    expect(markdown).toContain('`confirm_learning` - contextual gate (may affect completion; measure continuation)')
+    expect(markdown).toContain('`confirm_compression` - contextual follow-up (reduces default-surface clutter)')
+    expect(markdown).toContain(
+      'Extra confirmation/posting steps may reduce activation if agents do not reliably call follow-up tools. Consider measuring completion rate before adding safety gates.'
+    )
 
     const capabilities = buildAuditCapabilities(report)
     expect(capabilities.agentifyCapabilitiesVersion).toBe(1)
+    expect(capabilities.summary.surfaceClutterFollowUpToolCount).toBe(3)
+    expect(capabilities.summary.completionGateToolCount).toBe(3)
     expect(capabilities.profiles.find((profile) => profile.name === 'core')?.tools).toContain('draft_public_solution')
     expect(capabilities.tools.find((tool) => tool.currentName === 'submit_learning')).toMatchObject({
       name: 'draft_public_solution',
       exposure: 'default',
+      completionImpact: 'may_reduce_completion',
       advisoryPriority: 0.7,
       annotations: { readOnlyHint: false }
     })
     expect(capabilities.tools.find((tool) => tool.currentName === 'confirm_compression')).toMatchObject({
-      exposure: 'contextual'
+      exposure: 'contextual',
+      followUpKind: 'surface_clutter_reduction',
+      completionImpact: 'low'
+    })
+    expect(capabilities.tools.find((tool) => tool.currentName === 'confirm_learning')).toMatchObject({
+      exposure: 'contextual',
+      followUpKind: 'completion_gate',
+      completionImpact: 'may_reduce_completion'
     })
     expect(capabilities.instrumentationEvents).toContain('policy_block')
 

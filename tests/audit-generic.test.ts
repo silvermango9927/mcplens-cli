@@ -45,6 +45,7 @@ describe('audit works on a generic (non-learnings) MCP server', () => {
     // Generic tools without a domain-specific rewrite still get a usable "Use when:" template.
     const markdown = renderMarkdownReport(report)
     expect(markdown).toContain('# MCP Activation Audit')
+    expect(markdown).not.toContain('Extra confirmation/posting steps may reduce activation')
     expect(report.recommendedTools.find((tool) => tool.currentName === 'get_pull_request')?.recommendedDescription).toContain(
       'Use when:'
     )

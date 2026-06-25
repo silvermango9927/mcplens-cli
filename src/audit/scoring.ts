@@ -13,6 +13,7 @@ import {
   WorkflowAudit
 } from './schema.js'
 import { resolveAuditPolicy, severityForFinding } from './config.js'
+import { CONTRIBUTION_GATE_WARNING, isContributionSubmissionGate } from './workflow-risk.js'
 
 export interface UsageSummary {
   callCounts: Map<string, number>
@@ -136,12 +137,17 @@ export function buildWorkflowAudits(toolAudits: ToolAudit[]): WorkflowAudit[] {
     .map(([name, audits]) => {
       const roles = unique(audits.map((audit) => audit.role))
       const helperToolCount = audits.filter((audit) => audit.role === 'confirm' || audit.role === 'reject').length
+      const completionGateToolCount = audits.filter(isContributionSubmissionGate).length
+      const completionRisk: WorkflowAudit['completionRisk'] = completionGateToolCount > 0 ? 'may_reduce_completion' : 'low'
       return {
         name,
         toolNames: audits.map((audit) => audit.name).sort(),
         roles,
         callCount: audits.reduce((sum, audit) => sum + audit.callCount, 0),
         helperToolCount,
+        completionGateToolCount,
+        completionRisk,
+        warning: completionRisk === 'may_reduce_completion' ? CONTRIBUTION_GATE_WARNING : undefined,
         recommendation: workflowRecommendation(name, audits, helperToolCount)
       }
     })
@@ -374,6 +380,9 @@ function addOverlapFinding(audit: ToolAudit, otherTool: string, policy: AuditPol
 }
 
 function workflowRecommendation(name: string, audits: ToolAudit[], helperToolCount: number): string {
+  if (audits.some(isContributionSubmissionGate)) {
+    return `${name} includes contribution/submission draft, confirmation, or posting gates; keep required safety checks, but measure completion before adding more gates.`
+  }
   if (helperToolCount > 0) {
     return `${name} includes ${helperToolCount} confirm/reject helper tool${helperToolCount === 1 ? '' : 's'}; keep the safety flow but hide helpers until pending actions exist or move them to a lower-priority profile.`
   }
