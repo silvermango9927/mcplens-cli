@@ -54,6 +54,54 @@ describe('audit policy and CI behavior', () => {
     expect(report.ci.status).toBe('pass')
   })
 
+  it('enforces browser action contracts in the browser profile', () => {
+    const report = buildAuditReport({
+      tools: [
+        {
+          name: 'browser_click',
+          description: 'Click an element in the browser.',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              selector: { type: 'string', description: 'CSS selector to click.' }
+            },
+            required: ['selector']
+          }
+        },
+        {
+          name: 'browser_type',
+          description:
+            'Use when: type text into a focused browser field. Mutates: active page focus and form field value. Preconditions: an initialized session, active tab, loaded page, and visible selector already exist. Available afterward: session id, replay URL, screenshot, DOM observation, console trace, and network trace.',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              selector: { type: 'string', description: 'CSS selector of the target field.' },
+              text: { type: 'string', description: 'Text to type into the target field.' }
+            },
+            required: ['selector', 'text']
+          }
+        }
+      ],
+      logs: [],
+      missedPrompts: [],
+      policy: resolveAuditPolicy({ profile: 'browser' })
+    })
+
+    const click = report.tools.find((tool) => tool.name === 'browser_click')
+    const type = report.tools.find((tool) => tool.name === 'browser_type')
+    expect(click?.findings.map((finding) => finding.id)).toEqual(
+      expect.arrayContaining([
+        'browser_action_missing_mutation',
+        'browser_action_missing_preconditions',
+        'browser_action_missing_artifact'
+      ])
+    )
+    expect(type?.findings.map((finding) => finding.id)).not.toContain('browser_action_missing_mutation')
+    expect(type?.findings.map((finding) => finding.id)).not.toContain('browser_action_missing_preconditions')
+    expect(type?.findings.map((finding) => finding.id)).not.toContain('browser_action_missing_artifact')
+    expect(report.ci.status).toBe('fail')
+  })
+
   it('returns a CI failure and writes artifacts when configured failures trigger', async () => {
     const dir = await mkdtemp(path.join(tmpdir(), 'mcplens-ci-'))
     try {

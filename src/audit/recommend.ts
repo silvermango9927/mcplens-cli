@@ -12,7 +12,7 @@ import {
 } from './schema.js'
 import { compareAuditBaseline } from './baseline.js'
 import { resolveAuditPolicy } from './config.js'
-import { analyzeMissedPrompts, auditTools, buildWorkflowAudits, summarizeUsage } from './scoring.js'
+import { analyzeMissedPrompts, auditTools, buildWorkflowAudits, isBrowserActionTool, summarizeUsage } from './scoring.js'
 import { CONTRIBUTION_GATE_WARNING, isContributionSubmissionGate } from './workflow-risk.js'
 
 export interface BuildAuditReportOptions {
@@ -234,6 +234,11 @@ function recommendedDescription(tool: ToolAudit): string {
   if (tool.role === 'admin' || tool.role === 'destructive') {
     return `Use when: an administrator intentionally needs ${tool.workflow} maintenance.\nReturns: the maintenance result.\nDo not use when: serving ordinary user workflows or when a read-only inspection tool would be enough.\nSafety: admin/destructive capability; keep out of the default user-facing profile and require explicit operator intent.`
   }
+  if (isBrowserActionTool(tool)) {
+    return hasBrowserDescriptionSections(tool.description)
+      ? tool.description
+      : `Use when: the agent must perform the ${tool.workflow.replace(/_/g, ' ')} browser action in an existing browser session.\nMutates: state exactly which browser state changes, such as active tab URL, focus, form fields, scroll position, file picker selection, or page DOM state.\nPreconditions: state the required session, tab/page, selector, loaded URL, user gesture, or page-readiness state before calling.\nAvailable afterward: state the trace or debug artifact, such as session id, replay URL, screenshot, DOM observation, console trace, or network trace.`
+  }
   return hasRecommendedDescriptionSections(tool.description)
     ? tool.description
     : `Use when: the user needs the ${tool.workflow.replace(/_/g, ' ')} workflow.\nReturns: the relevant result.\nDo not use when: the task belongs to another workflow or no tool call is needed.\nSafety: document whether this tool is read-only, writes data, calls external systems, or requires confirmation.`
@@ -241,6 +246,10 @@ function recommendedDescription(tool: ToolAudit): string {
 
 function hasRecommendedDescriptionSections(description: string): boolean {
   return ['Use when:', 'Returns:', 'Do not use when:', 'Safety:'].every((section) => description.includes(section))
+}
+
+function hasBrowserDescriptionSections(description: string): boolean {
+  return ['Use when:', 'Mutates:', 'Preconditions:', 'Available afterward:'].every((section) => description.includes(section))
 }
 
 function recommendedPriority(tool: ToolAudit): number {

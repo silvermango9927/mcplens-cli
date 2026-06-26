@@ -326,6 +326,35 @@ function scoreTool(tool: McpTool, usage: UsageSummary, promptExpected: Set<strin
     score -= 12
     recommendations.push('Contribution/public-posting tool sounds like immediate publication instead of a safe draft-confirm flow.')
   }
+  if (isBrowserActionTool(tool)) {
+    if (policy.rules.requireBrowserActionMutation && !hasBrowserMutationWording(description)) {
+      addFinding(
+        'browser_action_missing_mutation',
+        'Browser action tool does not state which browser state it mutates.',
+        -12,
+        'warn',
+        'Add explicit browser-state wording, for example: "Mutates: active tab URL, focus, form fields, scroll position, or page DOM state."'
+      )
+    }
+    if (policy.rules.requireBrowserActionPreconditions && !hasBrowserPreconditionWording(description)) {
+      addFinding(
+        'browser_action_missing_preconditions',
+        'Browser action tool does not state preconditions that must be true before calling.',
+        -12,
+        'warn',
+        'Add a "Preconditions:" sentence that names required session, tab, selector, navigation, or page-readiness state.'
+      )
+    }
+    if (policy.rules.requireBrowserActionArtifact && !hasBrowserArtifactWording(description)) {
+      addFinding(
+        'browser_action_missing_artifact',
+        'Browser action tool does not state the trace or debug artifact available afterward.',
+        -12,
+        'warn',
+        'Add an "Available afterward:" sentence naming artifacts such as session id, replay URL, screenshot, DOM observation, console trace, or network trace.'
+      )
+    }
+  }
   if (role === 'confirm' || role === 'reject') {
     recommendations.push('Keep for safety, but consider contextual exposure only when there is a pending action.')
   }
@@ -417,6 +446,38 @@ function priorityHint(tool: McpTool): number | undefined {
 
 function hasSafetyWording(description: string): boolean {
   return /(confirm|review|draft|safe|redact|does not publish|explicit|undo|irreversible|destructive|permission)/i.test(description)
+}
+
+export function isBrowserActionTool(tool: Pick<McpTool, 'name' | 'description' | 'annotations' | '_meta'>): boolean {
+  if (tool.annotations?.browserAction === true || tool.annotations?.['browser_action'] === true) return true
+  if (tool._meta?.browserAction === true || tool._meta?.['browser_action'] === true) return true
+
+  const text = `${tool.name} ${tool.description}`.toLowerCase()
+  const hasBrowserContext = /\b(browser|page|tab|dom|element|selector|viewport|playwright|chromium|screenshot|console|network)\b/.test(text)
+  const hasActionVerb =
+    /\b(click|type|fill|press|key|keyboard|navigate|goto|open|reload|close|back|forward|select|hover|drag|drop|upload|submit|scroll|focus|blur|evaluate|execute|javascript|wait)\b/.test(
+      text
+    )
+  return hasBrowserContext && hasActionVerb
+}
+
+function hasBrowserMutationWording(description: string): boolean {
+  return /\b(mutates?|changes?|state changed|browser state|page state|tab state|active tab|active page|focus|form fields?|url|scroll position|viewport|cookies?|storage|dom state)\b/i.test(
+    description
+  )
+}
+
+function hasBrowserPreconditionWording(description: string): boolean {
+  return /\b(preconditions?|before calling|requires?|must already|only call after|selector must|page must|tab must|session must)\b/i.test(description)
+}
+
+function hasBrowserArtifactWording(description: string): boolean {
+  const hasArtifactLabel = /\b(available afterward|artifact|artifacts|debug|trace|returns?|captures?|records?)\b/i.test(description)
+  const hasBrowserArtifact =
+    /\b(session id|sessionid|replay url|replay|screenshot|dom observation|observation|console trace|console logs?|network trace|network logs?|trace id|traceid)\b/i.test(
+      description
+    )
+  return hasArtifactLabel && hasBrowserArtifact
 }
 
 function isCatchAllTool(tool: McpTool, nameTokens: string[]): boolean {

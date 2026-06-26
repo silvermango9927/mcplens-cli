@@ -16,13 +16,16 @@ const FindingIdSchema = z.enum([
   'generic_tool_name',
   'weak_required_input',
   'too_many_required_inputs',
+  'browser_action_missing_mutation',
+  'browser_action_missing_preconditions',
+  'browser_action_missing_artifact',
   'score_regression',
   'new_low_scoring_tool',
   'new_tool_without_description',
   'new_destructive_tool_without_safety'
 ])
 
-const ProfileSchema = z.enum(['production', 'local-dev', 'read-only', 'concise'])
+const ProfileSchema = z.enum(['production', 'local-dev', 'read-only', 'concise', 'browser'])
 
 const FlagToolOverlapSchema = z.union([z.enum(['off', 'info', 'warn', 'fail']), z.boolean()])
 
@@ -46,7 +49,10 @@ const PartialAuditConfigSchema = z
         requireSafetyForWrite: z.boolean().optional(),
         flagCatchAllTools: z.boolean().optional(),
         flagToolOverlap: FlagToolOverlapSchema.optional(),
-        allowReadOnlyWithoutSafety: z.boolean().optional()
+        allowReadOnlyWithoutSafety: z.boolean().optional(),
+        requireBrowserActionMutation: z.boolean().optional(),
+        requireBrowserActionPreconditions: z.boolean().optional(),
+        requireBrowserActionArtifact: z.boolean().optional()
       })
       .optional()
   })
@@ -71,7 +77,10 @@ const PROFILE_DEFAULTS: Record<AuditProfileName, AuditPolicy> = {
       requireSafetyForWrite: true,
       flagCatchAllTools: true,
       flagToolOverlap: 'warn',
-      allowReadOnlyWithoutSafety: true
+      allowReadOnlyWithoutSafety: true,
+      requireBrowserActionMutation: false,
+      requireBrowserActionPreconditions: false,
+      requireBrowserActionArtifact: false
     }
   },
   'local-dev': {
@@ -90,7 +99,10 @@ const PROFILE_DEFAULTS: Record<AuditProfileName, AuditPolicy> = {
       requireSafetyForWrite: false,
       flagCatchAllTools: true,
       flagToolOverlap: 'warn',
-      allowReadOnlyWithoutSafety: true
+      allowReadOnlyWithoutSafety: true,
+      requireBrowserActionMutation: false,
+      requireBrowserActionPreconditions: false,
+      requireBrowserActionArtifact: false
     }
   },
   'read-only': {
@@ -109,7 +121,10 @@ const PROFILE_DEFAULTS: Record<AuditProfileName, AuditPolicy> = {
       requireSafetyForWrite: false,
       flagCatchAllTools: false,
       flagToolOverlap: 'info',
-      allowReadOnlyWithoutSafety: true
+      allowReadOnlyWithoutSafety: true,
+      requireBrowserActionMutation: false,
+      requireBrowserActionPreconditions: false,
+      requireBrowserActionArtifact: false
     }
   },
   concise: {
@@ -128,7 +143,38 @@ const PROFILE_DEFAULTS: Record<AuditProfileName, AuditPolicy> = {
       requireSafetyForWrite: false,
       flagCatchAllTools: true,
       flagToolOverlap: 'info',
-      allowReadOnlyWithoutSafety: true
+      allowReadOnlyWithoutSafety: true,
+      requireBrowserActionMutation: false,
+      requireBrowserActionPreconditions: false,
+      requireBrowserActionArtifact: false
+    }
+  },
+  browser: {
+    profile: 'browser',
+    descriptionStyle: 'structured',
+    failOn: [
+      'missing_description',
+      'browser_action_missing_mutation',
+      'browser_action_missing_preconditions',
+      'browser_action_missing_artifact',
+      'score_regression'
+    ],
+    thresholds: {
+      minAverageScore: 0,
+      maxScoreDrop: 5,
+      minToolScore: 0
+    },
+    rules: {
+      requireDescriptions: true,
+      requireUseWhen: false,
+      requireSafetyForDestructive: true,
+      requireSafetyForWrite: false,
+      flagCatchAllTools: true,
+      flagToolOverlap: 'warn',
+      allowReadOnlyWithoutSafety: true,
+      requireBrowserActionMutation: true,
+      requireBrowserActionPreconditions: true,
+      requireBrowserActionArtifact: true
     }
   }
 }
