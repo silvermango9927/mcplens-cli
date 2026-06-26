@@ -30,6 +30,17 @@ export function renderMarkdownReport(report: ActivationAuditReport): string {
   for (const item of implementationPlan(report)) lines.push(`- [ ] ${item}`)
   lines.push('')
 
+  if (report.policy.profile === 'browser') {
+    lines.push('## Browser MCP Profile')
+    lines.push('')
+    lines.push('For browser action tools, state the operational contract before an agent calls the tool:')
+    lines.push('')
+    lines.push('- `Mutates:` the browser state changed by the action, such as active tab URL, focus, form fields, scroll position, file picker selection, or page DOM state.')
+    lines.push('- `Preconditions:` required session, tab/page, selector, loaded URL, user gesture, or page-readiness state.')
+    lines.push('- `Available afterward:` trace/debug artifacts such as session id, replay URL, screenshot, DOM observation, console trace, or network trace.')
+    lines.push('')
+  }
+
   lines.push('## Actionable Tool Findings')
   lines.push('')
   const reviewItems = buildReviewItems(report)
@@ -72,6 +83,17 @@ export function renderMarkdownReport(report: ActivationAuditReport): string {
   lines.push('Safety: side effects, confirmation requirements, redaction rules, auth scope, or why the tool is read-only.')
   lines.push('```')
   lines.push('')
+  if (report.policy.profile === 'browser') {
+    lines.push('For browser action tools, use this browser-specific structure:')
+    lines.push('')
+    lines.push('```text')
+    lines.push('Use when: the concrete browser interaction the agent should perform.')
+    lines.push('Mutates: the exact browser state changed by the action.')
+    lines.push('Preconditions: session/tab/page/selector/readiness requirements before calling.')
+    lines.push('Available afterward: session id, replay URL, screenshot, DOM observation, console trace, network trace, or another debug artifact.')
+    lines.push('```')
+    lines.push('')
+  }
 
   lines.push('## Rewritten Tool Descriptions')
   lines.push('')
@@ -291,7 +313,7 @@ function implementationPlan(report: ActivationAuditReport): string[] {
     .map((tool) => tool.tool)
   const completionGateTools = report.hiddenTools.filter((tool) => tool.followUpKind === 'completion_gate').map((tool) => tool.tool)
   const adminTools = report.hiddenTools.filter((tool) => tool.preferredAction === 'admin_profile').map((tool) => tool.tool)
-  return [
+  const plan = [
     'Export the current MCP tools/list and keep this report plus the JSON audit as the baseline for future PR checks.',
     `Define the activation model: default-visible primary tools are ${formatList(defaultTools)}; low-risk contextual follow-up tools are ${formatList(contextualTools)}; contribution/submission gates are ${formatList(completionGateTools)}; admin/destructive tools are ${formatList(adminTools)}.`,
     'Update server registration so contextual follow-up tools are only advertised after a pending action exists, or move them behind a separate admin/profile configuration if the client cannot do contextual exposure.',
@@ -304,6 +326,14 @@ function implementationPlan(report: ActivationAuditReport): string[] {
     'Wire warn-only CI on pull requests with a baseline audit so new tools, overlap, score regressions, and missing descriptions get an advisory PR comment before drift ships.',
     'Instrument proof metrics: initialized sessions, tools/list payload bytes, tools/call success/error, missed-prompt replay results, first-tool-call latency, and task completion turns.'
   ]
+  if (report.policy.profile === 'browser') {
+    plan.splice(
+      5,
+      0,
+      'For browser action tools, add explicit `Mutates`, `Preconditions`, and `Available afterward` lines so agents know what state changes, what must already be true, and what trace/debug artifact they can inspect after the call.'
+    )
+  }
+  return plan
 }
 
 function defaultVisibleToolNames(report: ActivationAuditReport): string[] {

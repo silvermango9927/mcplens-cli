@@ -27,7 +27,7 @@ export type McpTool = z.infer<typeof McpToolSchema>
 export type MissedPrompt = z.infer<typeof MissedPromptSchema>
 export type AuditLogEvent = z.infer<typeof AuditLogEventSchema>
 
-export type AuditProfileName = 'production' | 'local-dev' | 'read-only' | 'concise'
+export type AuditProfileName = 'production' | 'local-dev' | 'read-only' | 'concise' | 'browser'
 
 export type AuditSeverity = 'info' | 'warn' | 'fail'
 
@@ -44,6 +44,9 @@ export type AuditFindingId =
   | 'generic_tool_name'
   | 'weak_required_input'
   | 'too_many_required_inputs'
+  | 'browser_action_missing_mutation'
+  | 'browser_action_missing_preconditions'
+  | 'browser_action_missing_artifact'
   | 'score_regression'
   | 'new_low_scoring_tool'
   | 'new_tool_without_description'
@@ -75,6 +78,9 @@ export interface AuditPolicy {
     flagCatchAllTools: boolean
     flagToolOverlap: AuditSeverity | 'off'
     allowReadOnlyWithoutSafety: boolean
+    requireBrowserActionMutation: boolean
+    requireBrowserActionPreconditions: boolean
+    requireBrowserActionArtifact: boolean
   }
 }
 

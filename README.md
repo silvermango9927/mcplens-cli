@@ -35,6 +35,12 @@ Common audit inputs:
 - `--ci`: print a concise CI summary and return nonzero when configured failure rules trigger.
 - `--warn-only`: advisory CI mode; print warnings and return `0` even when findings exist.
 
+For browser-control MCPs, set `"profile": "browser"` in `mcplens.config.json`. The
+browser profile checks that action tools state the browser state they mutate, the
+preconditions required before calling, and the trace/debug artifact available afterward
+(for example session id, replay URL, screenshot, DOM observation, console trace, or
+network trace).
+
 ## Privacy
 
 The audit path is local and offline by design:

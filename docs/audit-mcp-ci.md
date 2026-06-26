@@ -73,10 +73,32 @@ Profiles:
 - `read-only`: for pure retrieval, search, and lookup MCPs.
 - `concise`: for maintainers who want minimal context footprint and no blanket verbose
   description template.
+- `browser`: for browser-control MCPs. In addition to normal description checks, browser
+  action tools must state what browser state they mutate, what preconditions must be true
+  before calling, and what trace/debug artifact is available afterward.
 
 Stable finding IDs include `missing_description`, `unsafe_destructive_tool`,
 `unsafe_write_tool`, `tool_overlap`, `catch_all_tool`, `score_regression`,
-`new_tool_without_description`, and `new_destructive_tool_without_safety`.
+`browser_action_missing_mutation`, `browser_action_missing_preconditions`,
+`browser_action_missing_artifact`, `new_tool_without_description`, and
+`new_destructive_tool_without_safety`.
+
+For Browser MCP servers, a minimal config is:
+
+```json
+{
+  "profile": "browser"
+}
+```
+
+Browser action tool descriptions should include the operational contract:
+
+```text
+Use when: the concrete browser interaction the agent should perform.
+Mutates: active tab URL, focus, form fields, scroll position, file picker selection, or page DOM state changed by this action.
+Preconditions: required session, tab/page, selector, loaded URL, user gesture, or page-readiness state before calling.
+Available afterward: session id, replay URL, screenshot, DOM observation, console trace, network trace, or another debug artifact.
+```
 
 ## Baselines
 
