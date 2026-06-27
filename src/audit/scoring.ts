@@ -183,7 +183,7 @@ export function classifyRole(name: string, annotations?: Record<string, unknown>
   if (first === 'reject') return 'reject'
   if (tokens.some((t) => ['delete', 'remove', 'unlink', 'destroy', 'drop', 'purge', 'truncate'].includes(t))) return 'destructive'
   if (tokens.some((t) => ['compress', 'compression', 'admin', 'maintenance', 'candidate', 'relation', 'relations'].includes(t))) return 'admin'
-  if (['search', 'get', 'list', 'read', 'find'].includes(first)) return 'read'
+  if (['search', 'get', 'list', 'read', 'find', 'observe', 'extract', 'inspect', 'screenshot'].includes(first)) return 'read'
   if (['report', 'vote', 'mark'].includes(first) || tokens.some((t) => ['useful', 'usage', 'feedback'].includes(t))) return 'feedback'
   if (['record', 'track'].includes(first)) return 'analytics'
   if (['submit', 'suggest', 'request', 'draft', 'preview'].includes(first)) return 'preview'
@@ -333,7 +333,7 @@ function scoreTool(tool: McpTool, usage: UsageSummary, promptExpected: Set<strin
         'Browser action tool does not state which browser state it mutates.',
         -12,
         'warn',
-        'Add explicit browser-state wording, for example: "Mutates: active tab URL, focus, form fields, scroll position, or page DOM state."'
+        'Add explicit browser action-state wording, for example: "Mutates: active session, page URL/history, DOM state, form values, cookies/auth, or no browser state."'
       )
     }
     if (policy.rules.requireBrowserActionPreconditions && !hasBrowserPreconditionWording(description)) {
@@ -342,7 +342,7 @@ function scoreTool(tool: McpTool, usage: UsageSummary, promptExpected: Set<strin
         'Browser action tool does not state preconditions that must be true before calling.',
         -12,
         'warn',
-        'Add a "Preconditions:" sentence that names required session, tab, selector, navigation, or page-readiness state.'
+        'Add a "Preconditions:" sentence that names required session/page readiness, prior observe call, known target element, or authenticated state.'
       )
     }
     if (policy.rules.requireBrowserActionArtifact && !hasBrowserArtifactWording(description)) {
@@ -351,7 +351,7 @@ function scoreTool(tool: McpTool, usage: UsageSummary, promptExpected: Set<strin
         'Browser action tool does not state the trace or debug artifact available afterward.',
         -12,
         'warn',
-        'Add an "Available afterward:" sentence naming artifacts such as session id, replay URL, screenshot, DOM observation, console trace, or network trace.'
+        'Add an "Available afterward:" sentence naming trace output such as session id, replay URL, screenshot, observation result, extracted data, or console/network logs.'
       )
     }
   }
@@ -453,28 +453,47 @@ export function isBrowserActionTool(tool: Pick<McpTool, 'name' | 'description' |
   if (tool._meta?.browserAction === true || tool._meta?.['browser_action'] === true) return true
 
   const text = `${tool.name} ${tool.description}`.toLowerCase()
-  const hasBrowserContext = /\b(browser|page|tab|dom|element|selector|viewport|playwright|chromium|screenshot|console|network)\b/.test(text)
+  const hasBrowserContext =
+    /\b(browser|session|page|tab|url|history|dom|element|selector|viewport|playwright|chromium|screenshot|console|network|cookie|cookies|auth|authenticated|observation|observe|form|field)\b/.test(
+      text
+    )
   const hasActionVerb =
-    /\b(click|type|fill|press|key|keyboard|navigate|goto|open|reload|close|back|forward|select|hover|drag|drop|upload|submit|scroll|focus|blur|evaluate|execute|javascript|wait)\b/.test(
+    /\b(act|click|type|fill|press|key|keyboard|navigate|goto|open|reload|close|back|forward|select|hover|drag|drop|upload|submit|scroll|focus|blur|evaluate|execute|javascript|wait|observe|extract|inspect|screenshot|create|start|resume|connect|disconnect|login|authenticate|set|clear)\b/.test(
       text
     )
   return hasBrowserContext && hasActionVerb
 }
 
 function hasBrowserMutationWording(description: string): boolean {
-  return /\b(mutates?|changes?|state changed|browser state|page state|tab state|active tab|active page|focus|form fields?|url|scroll position|viewport|cookies?|storage|dom state)\b/i.test(
-    description
-  )
+  const hasMutationClaim =
+    /\b(mutates?|changes?|modifies?|updates?|sets?|state changed|does not mutate|does not change|read[- ]only|no browser state changes?)\b/i.test(
+      description
+    )
+  const hasStateDetail =
+    /\b(session|browser state|page state|tab state|application state|active tab|active page|url|history|dom|focus|form fields?|form values?|field values?|scroll position|viewport|file picker|selection|cookies?|auth|authenticated state|storage|localstorage)\b/i.test(
+      description
+    )
+  return hasMutationClaim && hasStateDetail
 }
 
 function hasBrowserPreconditionWording(description: string): boolean {
-  return /\b(preconditions?|before calling|requires?|must already|only call after|selector must|page must|tab must|session must)\b/i.test(description)
+  const hasPreconditionClaim =
+    /\b(preconditions?|before calling|requires?|must already|only call after|selector must|page must|tab must|session must)\b/i.test(
+      description
+    )
+  const hasBrowserPrecondition =
+    /\b(active session|session|active tab|tab|page loaded|loaded page|page readiness|ready page|loaded url|current page|prior observe|observe call|observation|target element|known target|selector|visible element|authenticated|authenticated state|auth|logged in|cookies?|user gesture)\b/i.test(
+      description
+    )
+  return hasPreconditionClaim && hasBrowserPrecondition
 }
 
 function hasBrowserArtifactWording(description: string): boolean {
-  const hasArtifactLabel = /\b(available afterward|artifact|artifacts|debug|trace|returns?|captures?|records?)\b/i.test(description)
+  const hasArtifactLabel = /\b(available afterward|artifact|artifacts|debug|trace|trace output|returns?|captures?|records?)\b/i.test(
+    description
+  )
   const hasBrowserArtifact =
-    /\b(session id|sessionid|replay url|replay|screenshot|dom observation|observation|console trace|console logs?|network trace|network logs?|trace id|traceid)\b/i.test(
+    /\b(session id|sessionid|final url|current url|replay url|replay|screenshot|dom observation|observation result|observation|action result|extracted data|extracted structured payload|structured payload|console trace|console logs?|network trace|network logs?|trace id|traceid)\b/i.test(
       description
     )
   return hasArtifactLabel && hasBrowserArtifact

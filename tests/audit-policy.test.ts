@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { resolveAuditPolicy } from '../src/audit/config.js'
 import { loadToolsList } from '../src/audit/loaders.js'
 import { buildAuditReport } from '../src/audit/recommend.js'
+import { renderMarkdownReport } from '../src/audit/report.js'
 import { runAuditMcpCommand } from '../src/commands/audit-mcp.js'
 
 describe('audit policy and CI behavior', () => {
@@ -80,6 +81,42 @@ describe('audit policy and CI behavior', () => {
             },
             required: ['selector', 'text']
           }
+        },
+        {
+          name: 'navigate',
+          description:
+            'Use when: navigate the active page to a URL. Mutates: current page URL and page history. Preconditions: active session and page are ready. Available afterward: final URL, screenshot, and session ID.',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              url: { type: 'string', description: 'Destination URL to open.' }
+            },
+            required: ['url']
+          }
+        },
+        {
+          name: 'act',
+          description:
+            'Use when: perform a known browser action on the current page. Mutates: DOM, page, or application state. Preconditions: page loaded and target action known, ideally after a prior observe call. Available afterward: action result, screenshot, and replay URL.',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              instruction: { type: 'string', description: 'Browser action to perform.' }
+            },
+            required: ['instruction']
+          }
+        },
+        {
+          name: 'extract',
+          description:
+            'Use when: extract structured data from the loaded page. Mutates: does not mutate page state. Preconditions: page loaded. Available afterward: extracted structured payload.',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              schema: { type: 'object', description: 'Structured data shape to extract.' }
+            },
+            required: ['schema']
+          }
         }
       ],
       logs: [],
@@ -89,6 +126,9 @@ describe('audit policy and CI behavior', () => {
 
     const click = report.tools.find((tool) => tool.name === 'browser_click')
     const type = report.tools.find((tool) => tool.name === 'browser_type')
+    const navigate = report.tools.find((tool) => tool.name === 'navigate')
+    const act = report.tools.find((tool) => tool.name === 'act')
+    const extract = report.tools.find((tool) => tool.name === 'extract')
     expect(click?.findings.map((finding) => finding.id)).toEqual(
       expect.arrayContaining([
         'browser_action_missing_mutation',
@@ -96,9 +136,19 @@ describe('audit policy and CI behavior', () => {
         'browser_action_missing_artifact'
       ])
     )
+    expect(click?.findings.map((finding) => finding.id)).not.toContain('unsafe_write_tool')
     expect(type?.findings.map((finding) => finding.id)).not.toContain('browser_action_missing_mutation')
     expect(type?.findings.map((finding) => finding.id)).not.toContain('browser_action_missing_preconditions')
     expect(type?.findings.map((finding) => finding.id)).not.toContain('browser_action_missing_artifact')
+    expect(navigate?.findings.map((finding) => finding.id)).not.toContain('browser_action_missing_mutation')
+    expect(act?.findings.map((finding) => finding.id)).not.toContain('browser_action_missing_preconditions')
+    expect(extract?.role).toBe('read')
+    expect(extract?.findings.map((finding) => finding.id)).not.toContain('browser_action_missing_mutation')
+    expect(extract?.findings.map((finding) => finding.id)).not.toContain('browser_action_missing_artifact')
+    const markdown = renderMarkdownReport(report)
+    expect(markdown).toContain('`navigate`: mutates current page URL/history')
+    expect(markdown).toContain('`act`: mutates DOM/page/application state')
+    expect(markdown).toContain('`extract`: does not mutate page state')
     expect(report.ci.status).toBe('fail')
   })
 
