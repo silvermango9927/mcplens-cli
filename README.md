@@ -36,10 +36,11 @@ Common audit inputs:
 - `--warn-only`: advisory CI mode; print warnings and return `0` even when findings exist.
 
 For browser-control MCPs, set `"profile": "browser"` in `mcplens.config.json`. The
-browser profile checks that action tools state the browser state they mutate, the
-preconditions required before calling, and the trace/debug artifact available afterward
-(for example session id, replay URL, screenshot, DOM observation, console trace, or
-network trace).
+browser profile checks that browser/session/page action tools state the state they
+mutate, the preconditions required before calling, and the trace output available
+afterward. For example, `navigate` should name URL/history mutation and final URL or
+screenshot trace; `act` should name DOM/page/application mutation plus action trace; and
+`extract` should explicitly say it does not mutate page state and returns extracted data.
 
 ## Privacy
 

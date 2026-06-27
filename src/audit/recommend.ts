@@ -237,7 +237,7 @@ function recommendedDescription(tool: ToolAudit): string {
   if (isBrowserActionTool(tool)) {
     return hasBrowserDescriptionSections(tool.description)
       ? tool.description
-      : `Use when: the agent must perform the ${tool.workflow.replace(/_/g, ' ')} browser action in an existing browser session.\nMutates: state exactly which browser state changes, such as active tab URL, focus, form fields, scroll position, file picker selection, or page DOM state.\nPreconditions: state the required session, tab/page, selector, loaded URL, user gesture, or page-readiness state before calling.\nAvailable afterward: state the trace or debug artifact, such as session id, replay URL, screenshot, DOM observation, console trace, or network trace.`
+      : `Use when: the agent must perform the ${tool.workflow.replace(/_/g, ' ')} browser action in an existing browser session.\nMutates: state whether this changes the active session, page URL/history, DOM/application state, form values, cookies/auth, focus/scroll/viewport, or explicitly does not mutate page state.\nPreconditions: state the required active session, loaded page, prior observe call, known target element/selector, authenticated state, user gesture, or page-readiness state before calling.\nAvailable afterward: state the trace output, such as session id, final URL, replay URL, screenshot, action result, observation result, extracted structured payload, console logs, or network logs.`
   }
   return hasRecommendedDescriptionSections(tool.description)
     ? tool.description

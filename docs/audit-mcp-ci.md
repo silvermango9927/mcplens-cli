@@ -74,8 +74,8 @@ Profiles:
 - `concise`: for maintainers who want minimal context footprint and no blanket verbose
   description template.
 - `browser`: for browser-control MCPs. In addition to normal description checks, browser
-  action tools must state what browser state they mutate, what preconditions must be true
-  before calling, and what trace/debug artifact is available afterward.
+  action tools must state what browser/session/page state they mutate, what preconditions
+  must be true before calling, and what trace output is available afterward.
 
 Stable finding IDs include `missing_description`, `unsafe_destructive_tool`,
 `unsafe_write_tool`, `tool_overlap`, `catch_all_tool`, `score_regression`,
@@ -95,10 +95,19 @@ Browser action tool descriptions should include the operational contract:
 
 ```text
 Use when: the concrete browser interaction the agent should perform.
-Mutates: active tab URL, focus, form fields, scroll position, file picker selection, or page DOM state changed by this action.
-Preconditions: required session, tab/page, selector, loaded URL, user gesture, or page-readiness state before calling.
-Available afterward: session id, replay URL, screenshot, DOM observation, console trace, network trace, or another debug artifact.
+Mutates: active session, page URL/history, DOM/application state, form values, cookies/auth, focus/scroll/viewport, or explicitly no page-state mutation.
+Preconditions: active session, loaded page, prior observe call, known target element/selector, authenticated state, user gesture, or page-readiness state before calling.
+Available afterward: session id, final URL, replay URL, screenshot, action result, observation result, extracted structured payload, console logs, network logs, or another trace artifact.
 ```
+
+Examples:
+
+- `navigate`: mutates current page URL/history; precondition: active session; trace:
+  final URL, screenshot, session ID.
+- `act`: mutates DOM/page/application state; precondition: page loaded and target/action
+  known, ideally after observe; trace: action result, screenshot, replay.
+- `extract`: does not mutate page state; precondition: page loaded; trace: extracted
+  structured payload.
 
 ## Baselines
 

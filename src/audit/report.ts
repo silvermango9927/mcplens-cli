@@ -35,9 +35,15 @@ export function renderMarkdownReport(report: ActivationAuditReport): string {
     lines.push('')
     lines.push('For browser action tools, state the operational contract before an agent calls the tool:')
     lines.push('')
-    lines.push('- `Mutates:` the browser state changed by the action, such as active tab URL, focus, form fields, scroll position, file picker selection, or page DOM state.')
-    lines.push('- `Preconditions:` required session, tab/page, selector, loaded URL, user gesture, or page-readiness state.')
-    lines.push('- `Available afterward:` trace/debug artifacts such as session id, replay URL, screenshot, DOM observation, console trace, or network trace.')
+    lines.push('- `Mutates:` the browser state changed by the action, such as active session, page URL/history, DOM/application state, form values, cookies/auth, focus/scroll/viewport, or no page-state mutation.')
+    lines.push('- `Preconditions:` required active session, loaded page, prior observe call, known target element/selector, authenticated state, user gesture, or page-readiness state.')
+    lines.push('- `Available afterward:` trace output such as session id, final URL, replay URL, screenshot, action result, observation result, extracted structured payload, console logs, or network logs.')
+    lines.push('')
+    lines.push('Examples:')
+    lines.push('')
+    lines.push('- `navigate`: mutates current page URL/history; precondition: active session; trace: final URL, screenshot, session ID.')
+    lines.push('- `act`: mutates DOM/page/application state; precondition: page loaded and target/action known, ideally after observe; trace: action result, screenshot, replay.')
+    lines.push('- `extract`: does not mutate page state; precondition: page loaded; trace: extracted structured payload.')
     lines.push('')
   }
 
@@ -88,9 +94,9 @@ export function renderMarkdownReport(report: ActivationAuditReport): string {
     lines.push('')
     lines.push('```text')
     lines.push('Use when: the concrete browser interaction the agent should perform.')
-    lines.push('Mutates: the exact browser state changed by the action.')
-    lines.push('Preconditions: session/tab/page/selector/readiness requirements before calling.')
-    lines.push('Available afterward: session id, replay URL, screenshot, DOM observation, console trace, network trace, or another debug artifact.')
+    lines.push('Mutates: session, URL/history, DOM/application state, form values, cookies/auth, or explicitly no page-state mutation.')
+    lines.push('Preconditions: active session, loaded page, prior observe call, known target element, authenticated state, or other readiness requirements.')
+    lines.push('Available afterward: session id, final URL, replay URL, screenshot, action result, observation result, extracted data, console logs, or network logs.')
     lines.push('```')
     lines.push('')
   }
@@ -330,7 +336,7 @@ function implementationPlan(report: ActivationAuditReport): string[] {
     plan.splice(
       5,
       0,
-      'For browser action tools, add explicit `Mutates`, `Preconditions`, and `Available afterward` lines so agents know what state changes, what must already be true, and what trace/debug artifact they can inspect after the call.'
+      'For browser action tools, add explicit `Mutates`, `Preconditions`, and `Available afterward` lines so agents know what browser/session/page state changes, what must already be true, and what trace output they can inspect after the call.'
     )
   }
   return plan
