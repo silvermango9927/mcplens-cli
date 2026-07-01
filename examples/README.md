@@ -1,7 +1,26 @@
-# MCPLens examples
+# MCPLens Examples
 
-Real-world-shaped API fixtures used to measure MCPLens impact. See the aggregated
-results in [`../IMPACT.md`](../IMPACT.md).
+This directory contains two kinds of examples:
+
+- Synthetic MCP `tools/list` exports and generated audit reports for `audit-mcp`.
+- Real-world-shaped OpenAPI fixtures used by the OpenAPI-to-MCP generator and impact
+  report.
+
+## Audit Report Examples
+
+These examples are synthetic and safe to inspect. They are meant to show the report shape
+without requiring access to a private MCP server.
+
+| Example | Shows | Rerun |
+|---------|-------|-------|
+| [`generic-mcp/`](generic-mcp/) | Short descriptions, destructive tools, contextual confirmation helpers, catch-all tools | `npx mcplens-cli audit-mcp --tools-list examples/generic-mcp/tools-list.json --out examples/generic-mcp/report.md --offline` |
+| [`browser-mcp/`](browser-mcp/) | Browser profile checks for mutation, preconditions, and trace artifacts | `npx mcplens-cli audit-mcp --tools-list examples/browser-mcp/tools-list.json --config examples/browser-mcp/mcplens.config.json --out examples/browser-mcp/report.md --offline` |
+| [`large-mcp/`](large-mcp/) | Larger tool surface with overlap, default/admin/contextual exposure pressure | `npx mcplens-cli audit-mcp --tools-list examples/large-mcp/tools-list.json --out examples/large-mcp/report.md --offline` |
+
+## OpenAPI Fixtures
+
+Real-world-shaped API fixtures used to measure MCPLens impact. See the aggregated results
+in [`../IMPACT.md`](../IMPACT.md).
 
 Each directory contains:
 
@@ -43,5 +62,5 @@ for api in github stripe slack google-calendar notion; do
 done
 ```
 
-Drop `--offline` with `ANTHROPIC_API_KEY` set to use LLM curation (better field selection
-and endpoint hiding).
+Drop `--offline` with `ANTHROPIC_API_KEY` set to use LLM curation for the OpenAPI fixtures
+(better field selection and endpoint hiding).

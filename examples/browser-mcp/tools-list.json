@@ -1,0 +1,70 @@
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "tools": [
+      {
+        "name": "browser_navigate",
+        "description": "Navigate to a URL.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "url": {
+              "type": "string"
+            }
+          },
+          "required": ["url"]
+        }
+      },
+      {
+        "name": "browser_click",
+        "description": "Click an element.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "selector": {
+              "type": "string"
+            }
+          },
+          "required": ["selector"]
+        }
+      },
+      {
+        "name": "browser_type",
+        "description": "Use when: the user needs to enter text into a focused or selected browser field. Mutates: DOM form values and focus state. Preconditions: active browser session, loaded page, and a known selector or focused input. Available afterward: session id, final URL, action result, and screenshot.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "selector": {
+              "type": "string"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": ["selector", "text"]
+        }
+      },
+      {
+        "name": "browser_extract",
+        "description": "Use when: the user needs structured data from the currently loaded page. Mutates: no page state. Preconditions: active browser session and loaded page. Available afterward: extracted structured payload and source URL.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "schema": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      {
+        "name": "browser_screenshot",
+        "description": "Use when: the user needs a visual trace of the current page. Mutates: no page state. Preconditions: active browser session and loaded page. Available afterward: screenshot artifact, session id, and current URL.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    ]
+  }
+}

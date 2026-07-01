@@ -1,0 +1,235 @@
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "tools": [
+      {
+        "name": "search_projects",
+        "description": "Use when: the user needs to find projects by name, owner, status, or keyword. Returns project ids, names, owners, status, and short summaries.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "Search phrase or project attribute."
+            }
+          },
+          "required": ["query"]
+        }
+      },
+      {
+        "name": "find_projects",
+        "description": "Find projects.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "q": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      {
+        "name": "get_project",
+        "description": "Use when: the user has a project id and needs the current project summary, owner, status, milestones, and links.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "projectId": {
+              "type": "string",
+              "description": "Project id."
+            }
+          },
+          "required": ["projectId"]
+        }
+      },
+      {
+        "name": "list_project_tasks",
+        "description": "Use when: the user needs tasks in a known project, optionally filtered by status or assignee.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "projectId": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            },
+            "assignee": {
+              "type": "string"
+            }
+          },
+          "required": ["projectId"]
+        }
+      },
+      {
+        "name": "search_tasks",
+        "description": "Use when: the user needs to find tasks across projects by keyword, assignee, label, or status. Returns task ids, project ids, titles, status, and assignees.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string"
+            }
+          },
+          "required": ["query"]
+        }
+      },
+      {
+        "name": "create_task",
+        "description": "Create a task in a project.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "projectId": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            },
+            "body": {
+              "type": "string"
+            }
+          },
+          "required": ["projectId", "title"]
+        }
+      },
+      {
+        "name": "update_task",
+        "description": "Use when: the user asks to edit an existing task's title, body, assignee, labels, status, or due date. Returns the updated task.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "taskId": {
+              "type": "string"
+            },
+            "fields": {
+              "type": "object"
+            }
+          },
+          "required": ["taskId", "fields"]
+        }
+      },
+      {
+        "name": "complete_task",
+        "description": "Mark a task complete.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "taskId": {
+              "type": "string"
+            }
+          },
+          "required": ["taskId"]
+        }
+      },
+      {
+        "name": "comment_on_task",
+        "description": "Use when: the user asks to add a comment or status note to an existing task. Returns the created comment id and task link.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "taskId": {
+              "type": "string"
+            },
+            "body": {
+              "type": "string"
+            }
+          },
+          "required": ["taskId", "body"]
+        }
+      },
+      {
+        "name": "confirm_task_update",
+        "description": "Confirm a pending task update.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "pendingId": {
+              "type": "string"
+            }
+          },
+          "required": ["pendingId"]
+        }
+      },
+      {
+        "name": "reject_task_update",
+        "description": "Reject a pending task update.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "pendingId": {
+              "type": "string"
+            }
+          },
+          "required": ["pendingId"]
+        }
+      },
+      {
+        "name": "list_users",
+        "description": "List users.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {}
+        }
+      },
+      {
+        "name": "get_user",
+        "description": "Use when: the user needs profile details for a known user id or email. Returns display name, email, team, and active status.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "userId": {
+              "type": "string"
+            }
+          },
+          "required": ["userId"]
+        }
+      },
+      {
+        "name": "admin_export_workspace",
+        "description": "Export the entire workspace.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "format": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      {
+        "name": "delete_project",
+        "description": "Delete a project.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "projectId": {
+              "type": "string"
+            }
+          },
+          "required": ["projectId"]
+        }
+      },
+      {
+        "name": "raw_workspace_api",
+        "description": "Call any workspace API endpoint.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "method": {
+              "type": "string"
+            },
+            "path": {
+              "type": "string"
+            },
+            "body": {
+              "type": "object"
+            }
+          },
+          "required": ["method", "path"]
+        }
+      }
+    ]
+  }
+}

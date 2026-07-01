@@ -18,7 +18,21 @@ try {
   if (!packed?.filename || !Array.isArray(packed.files)) throw new Error(`Unexpected npm pack output: ${pack.stdout}`)
 
   const packedFiles = new Set(packed.files.map((file) => file.path))
-  for (const required of ['dist/cli.js', 'dist/codegen/generate.js', 'src/mapping/runtime.ts', 'README.md', 'package.json']) {
+  for (const required of [
+    'dist/cli.js',
+    'dist/codegen/generate.js',
+    'src/mapping/runtime.ts',
+    'README.md',
+    'GUIDE.md',
+    'IMPACT.md',
+    'CHANGELOG.md',
+    'LICENSE',
+    'docs/audit-mcp-ci.md',
+    'examples/generic-mcp/report.md',
+    'examples/browser-mcp/report.md',
+    'examples/large-mcp/report.md',
+    'package.json'
+  ]) {
     if (!packedFiles.has(required)) throw new Error(`npm pack did not include ${required}`)
   }
 
