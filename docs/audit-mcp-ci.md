@@ -168,6 +168,7 @@ jobs:
             --baseline mcplens-baseline.json \
             --out mcplens-report.md \
             --json mcplens-report.json \
+            --capabilities mcplens-capabilities.json \
             --ci \
             --warn-only
 
@@ -179,4 +180,5 @@ jobs:
           path: |
             mcplens-report.md
             mcplens-report.json
+            mcplens-capabilities.json
 ```

@@ -1,9 +1,11 @@
 {
   "name": "mcplens-cli",
   "version": "0.1.2",
-  "description": "Audit MCP tool activation locally and generate lean MCP servers from OpenAPI specs",
+  "description": "Audit whether agents can discover, choose, and complete MCP tool workflows",
   "license": "MIT",
   "author": "MCPLens contributors",
+  "main": "dist/cli.js",
+  "types": "dist/cli.d.ts",
   "type": "module",
   "repository": {
     "type": "git",
@@ -17,13 +19,18 @@
     "mcplens",
     "mcp",
     "mcp-audit",
+    "mcp-tools",
     "tool-activation",
+    "agent-reliability",
     "agent",
     "openapi",
     "api",
     "codegen",
     "typescript"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "engines": {
     "node": ">=20"
   },
@@ -33,8 +40,14 @@
   },
   "files": [
     "dist",
+    "docs/audit-mcp-ci.md",
+    "examples",
     "src/mapping/runtime.ts",
-    "README.md"
+    "README.md",
+    "GUIDE.md",
+    "IMPACT.md",
+    "CHANGELOG.md",
+    "LICENSE"
   ],
   "scripts": {
     "build": "tsc",
